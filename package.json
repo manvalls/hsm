@@ -1,6 +1,6 @@
 {
   "name": "hsm",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A utility which maps request events to pathname ones",
   "main": "main.js",
   "dependencies": {
@@ -8,9 +8,7 @@
     "vse": "",
     "vz.yielded": ""
   },
-  "devDependencies": {
-    
-  },
+  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git://github.com/manvalls/hsm.git"
