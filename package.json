@@ -1,0 +1,23 @@
+{
+  "name": "hsm",
+  "version": "0.0.0",
+  "description": "A utility which maps request events to pathname ones",
+  "main": "main.js",
+  "dependencies": {
+    "vz.rand": "",
+    "vse": "",
+    "vz.yielded": ""
+  },
+  "devDependencies": {
+    
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/manvalls/hsm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/manvalls/hsm/issues"
+  },
+  "author": "Manuel Valls Fernández <manolo@chatiku.com>",
+  "license": "LGPL-3.0"
+}
