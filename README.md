@@ -11,6 +11,14 @@ No piece of software is ever completed, feel free to contribute and be humble.
 ## Sample usage:
 
 ```javascript
+var Hsm = require('hsm'),
+    server = require('http').createServer(),
+    hsm = new Hsm(server);
 
+server.listen(12345);
+
+hsm.on('GET /foo',function(e){
+  e.send('bar');
+});
 ```
 
