@@ -65,11 +65,13 @@ Object.defineProperties(Event.prototype,{
         }else headers = {};
     }
     
-    data = new Buffer(JSON.stringify(data),'utf8');
-    
-    headers['Content-Length'] = data.length;
-    headers['Content-Type'] = 'application/json; charset=utf-8';
-    if(!('Access-Control-Allow-Origin' in headers)) headers['Access-Control-Allow-Origin'] = '*';
+    if(!headers['Content-Type']){
+      data = new Buffer(JSON.stringify(data),'utf8');
+      
+      headers['Content-Length'] = data.length;
+      headers['Content-Type'] = 'application/json; charset=utf-8';
+      if(!('Access-Control-Allow-Origin' in headers)) headers['Access-Control-Allow-Origin'] = '*';
+    }
     
     this.response.writeHead(status,reason,headers);
     this.response.end(data);
@@ -128,7 +130,9 @@ function onRequest(req,res){
   parsedUrl = url.parse(href,true);
   event = new Event(req,res,parsedUrl);
   
-  if(this[hsm].fire(req.method + ' ' + parsedUrl.pathname,event).length == 0) this[hsm].fire('DEFAULT',event);
+  if(this[hsm].fire(req.method + ' ' + parsedUrl.pathname,event).length == 0){
+    if(this[hsm].fire(req.method + ' DEFAULT',event).length == 0) this[hsm].fire('DEFAULT',event);
+  }
 }
 
 Hsm.prototype = new Vse();
