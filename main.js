@@ -1,6 +1,7 @@
 var Su = require('vz.rand').Su,
     Vse = require('vse'),
     Yielded = require('vz.yielded'),
+    walk = require('vz.walk'),
     
     url = require('url'),
     
@@ -15,14 +16,27 @@ var Su = require('vz.rand').Su,
     body = Su(),
     bodyDone = Su(),
     
+    ctRE = /([^;]+).*charset=(.*)(;.*)?/,
+    
     Hsm;
 
 // Event
 
 function Event(req,res,parsedUrl){
+  var m = req.headers['content-type'];
+  
   this.url = parsedUrl;
   this.request = req;
   this.response = res;
+  
+  if(m){
+    m = m.match(ctRE);
+    this.encoding = m[2];
+    this.mime = m[1];
+  }else{
+    this.encoding = null;
+    this.mime = null;
+  }
 }
 
 function onData(data){
@@ -34,6 +48,11 @@ function onEnd(){
   
   this[bodyDone] = true;
   while(yd = this[bodyOps].shift()) yd.value = this[body];
+}
+
+function* getJSON(body,charset){
+  body = yield body;
+  return JSON.parse(body);
 }
 
 Object.defineProperties(Event.prototype,{
@@ -97,6 +116,9 @@ Object.defineProperties(Event.prototype,{
     this.request[bodyOps].push(yd);
     
     return yd;
+  }},
+  getJSON: {value: function(){
+    return walk(getJSON,[this.getBody(),]);
   }}
 });
 
