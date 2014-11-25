@@ -3,6 +3,7 @@ var Su = require('vz.rand').Su,
     Yielded = require('vz.yielded'),
     walk = require('vz.walk'),
     
+    QS = require('querystring'),
     url = require('url'),
     
     sent = Su(),
@@ -52,7 +53,12 @@ function onEnd(){
 
 function* getJSON(body,charset){
   body = yield body;
-  return JSON.parse(body);
+  return JSON.parse(body.toString(charset));
+}
+
+function* getQS(body,charset){
+  body = yield body;
+  return QS.parse(body.toString(charset));
 }
 
 Object.defineProperties(Event.prototype,{
@@ -118,7 +124,10 @@ Object.defineProperties(Event.prototype,{
     return yd;
   }},
   getJSON: {value: function(){
-    return walk(getJSON,[this.getBody(),]);
+    return walk(getJSON,[this.getBody(),this.encoding]);
+  }},
+  getQS: {value: function(){
+    return walk(getQS,[this.getBody(),this.encoding]);
   }}
 });
 
