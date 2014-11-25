@@ -4,11 +4,16 @@ var Su = require('vz.rand').Su,
     
     url = require('url'),
     
+    sent = Su(),
     hsm = Su(),
     
     from = Su(),
     to = Su(),
     ids = Su(),
+    
+    bodyOps = Su(),
+    body = Su(),
+    bodyDone = Su(),
     
     Hsm;
 
@@ -20,6 +25,17 @@ function Event(req,res,parsedUrl){
   this.response = res;
 }
 
+function onData(data){
+  this[body] = Buffer.concat([this[body],data]);
+}
+
+function onEnd(){
+  var yd;
+  
+  this[bodyDone] = true;
+  while(yd = this[bodyOps].shift()) yd.value = this[body];
+}
+
 Object.defineProperties(Event.prototype,{
   query: {get: function(){
     return this.url.query;
@@ -28,6 +44,7 @@ Object.defineProperties(Event.prototype,{
     return this.request.headers;
   }},
   send: {value: function(status,reason,headers,data){
+    if(this[sent]) throw new Error('Request already answered');
     
     switch(arguments.length){
       case 1:
@@ -56,6 +73,28 @@ Object.defineProperties(Event.prototype,{
     
     this.response.writeHead(status,reason,headers);
     this.response.end(data);
+    
+    this[sent] = true;
+  }},
+  getBody: {value: function(){
+    var yd;
+    
+    if(this.request[bodyDone]) return new Yielded(this.request[body]);
+    
+    if(!this.request[bodyOps]){
+      this.request[bodyOps] = [];
+      this.request[body] = new Buffer(0);
+      this.request[bodyDone] = false;
+      
+      this.request.on('data',onData);
+      this.request.on('close',onEnd);
+      this.request.on('end',onEnd);
+    }
+    
+    yd = new Yielded();
+    this.request[bodyOps].push(yd);
+    
+    return yd;
   }}
 });
 
@@ -89,7 +128,7 @@ function onRequest(req,res){
   parsedUrl = url.parse(href,true);
   event = new Event(req,res,parsedUrl);
   
-  this[hsm].fire(req.method + ' ' + parsedUrl.pathname,event);
+  if(this[hsm].fire(req.method + ' ' + parsedUrl.pathname,event).length == 0) this[hsm].fire('DEFAULT',event);
 }
 
 Hsm.prototype = new Vse();
