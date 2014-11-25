@@ -128,6 +128,12 @@ Object.defineProperties(Event.prototype,{
   }},
   getQS: {value: function(){
     return walk(getQS,[this.getBody(),this.encoding]);
+  }},
+  get: {value: function(){
+    
+    if(this.mime == 'application/json') return walk(getJSON,[this.getBody(),this.encoding]);
+    else return walk(getQS,[this.getBody(),this.encoding]);
+    
   }}
 });
 
