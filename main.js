@@ -16,8 +16,10 @@ var Su = require('vz.rand').Su,
     bodyOps = Su(),
     body = Su(),
     bodyDone = Su(),
+    maxBodySize = Su(),
+    bodyError = Su(),
     
-    ctRE = /([^;]+).*charset=(.*)(;.*)?/,
+    ctRE = /([^;]+)(?:.*charset=(.*)(;.*)?)?/,
     
     Hsm;
 
@@ -41,7 +43,17 @@ function Event(req,res,parsedUrl){
 }
 
 function onData(data){
+  var e;
+  
   this[body] = Buffer.concat([this[body],data]);
+  
+  if(this[body].length > this[maxBodySize]){
+    this[bodyError] = e = new Error('Request body size too large');
+    while(yd = this[bodyOps].shift()) yd.error = e;
+    
+    this.removeListener('data',onData);
+    this.removeListener('end',onEnd);
+  }
 }
 
 function onEnd(){
@@ -103,20 +115,25 @@ Object.defineProperties(Event.prototype,{
     
     this[sent] = true;
   }},
-  getBody: {value: function(){
+  getBody: {value: function(maxSize){
     var yd;
     
+    if(this.request[bodyError]) return new Yielded(this.request[bodyError]);
+    if(maxSize == null) maxSize = 10e3;
     if(this.request[bodyDone]) return new Yielded(this.request[body]);
     
     if(!this.request[bodyOps]){
       this.request[bodyOps] = [];
       this.request[body] = new Buffer(0);
       this.request[bodyDone] = false;
+      this.request[maxBodySize] = maxSize;
       
       this.request.on('data',onData);
       this.request.on('close',onEnd);
       this.request.on('end',onEnd);
     }
+    
+    this.request[maxBodySize] = Math.max(this.request[maxBodySize],maxSize)
     
     yd = new Yielded();
     this.request[bodyOps].push(yd);
