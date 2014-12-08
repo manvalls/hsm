@@ -2,6 +2,7 @@ var Su = require('vz.rand').Su,
     Vse = require('vse'),
     Yielded = require('vz.yielded'),
     walk = require('vz.walk'),
+    ebjs = require('ebjs'),
     
     QS = require('querystring'),
     url = require('url'),
@@ -73,6 +74,33 @@ function* getQS(body,charset){
   return QS.parse(body.toString(charset));
 }
 
+function* getEbjs(body){
+  return yield ebjs.unpack(yield body);
+}
+
+function* send(that,status,reason,headers,data){
+  if(that[sent]) throw new Error('Request already answered');
+  
+  if(!headers['Content-Type']){
+    if(that.headers['accept'] && that.headers['accept'].indexOf('application/ebjs') != -1){
+      data = yield ebjs.pack(data);
+      headers['Content-Type'] = 'application/ebjs';
+    }else{
+      data = new Buffer(JSON.stringify(data),'utf8');
+      headers['Content-Type'] = 'application/json; charset=utf-8';
+    }
+    
+    headers['Content-Length'] = data.length;
+  }
+  
+  headers['Access-Control-Allow-Origin'] = headers['Access-Control-Allow-Origin'] || '*';
+  
+  that.response.writeHead(status,reason,headers);
+  that.response.end(data);
+  
+  that[sent] = true;
+}
+
 Object.defineProperties(Event.prototype,{
   query: {get: function(){
     return this.url.query;
@@ -81,7 +109,6 @@ Object.defineProperties(Event.prototype,{
     return this.request.headers;
   }},
   send: {value: function(status,reason,headers,data){
-    if(this[sent]) throw new Error('Request already answered');
     
     switch(arguments.length){
       case 1:
@@ -102,18 +129,7 @@ Object.defineProperties(Event.prototype,{
         }else headers = {};
     }
     
-    if(!headers['Content-Type']){
-      data = new Buffer(JSON.stringify(data),'utf8');
-      
-      headers['Content-Length'] = data.length;
-      headers['Content-Type'] = 'application/json; charset=utf-8';
-      if(!('Access-Control-Allow-Origin' in headers)) headers['Access-Control-Allow-Origin'] = '*';
-    }
-    
-    this.response.writeHead(status,reason,headers);
-    this.response.end(data);
-    
-    this[sent] = true;
+    return walk(send,[this,status,reason,headers,data]);
   }},
   getBody: {value: function(maxSize){
     var yd;
@@ -148,8 +164,12 @@ Object.defineProperties(Event.prototype,{
   }},
   get: {value: function(){
     
-    if(this.mime == 'application/json') return walk(getJSON,[this.getBody(),this.encoding]);
-    else return walk(getQS,[this.getBody(),this.encoding]);
+    switch(this.mime){
+      case 'application/json':                  return walk(getJSON,[this.getBody(),this.encoding]);
+      case 'application/ebjs':                  return walk(getEbjs,[this.getBody()]);
+      case 'application/x-www-form-urlencoded': return walk(getQS,[this.getBody(),this.encoding]);
+      default:                                  return this.getBody();
+    }
     
   }}
 });
