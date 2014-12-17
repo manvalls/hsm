@@ -64,51 +64,16 @@ function onEnd(){
   while(yd = this[bodyOps].shift()) yd.value = this[body];
 }
 
-function* getJSON(body,charset){
-  body = yield body;
-  return JSON.parse(body.toString(charset));
-}
-
-function* getQS(body,charset){
-  body = yield body;
-  return QS.parse(body.toString(charset));
-}
-
-function* getEbjs(body){
-  return yield ebjs.unpack(yield body);
-}
-
-function* send(that,status,reason,headers,data){
-  if(that[sent]) throw new Error('Request already answered');
-  
-  if(!headers['Content-Type']){
-    if(that.headers['accept'] && that.headers['accept'].indexOf('application/ebjs') != -1){
-      data = yield ebjs.pack(data);
-      headers['Content-Type'] = 'application/ebjs';
-    }else{
-      data = new Buffer(JSON.stringify(data),'utf8');
-      headers['Content-Type'] = 'application/json; charset=utf-8';
-    }
-    
-    headers['Content-Length'] = data.length;
-  }
-  
-  headers['Access-Control-Allow-Origin'] = headers['Access-Control-Allow-Origin'] || '*';
-  
-  that.response.writeHead(status,reason,headers);
-  that.response.end(data);
-  
-  that[sent] = true;
-}
-
 Object.defineProperties(Event.prototype,{
+  
   query: {get: function(){
     return this.url.query;
   }},
   headers: {get: function(){
     return this.request.headers;
   }},
-  send: {value: function(status,reason,headers,data){
+  
+  send: {value: walk.wrap(function*(status,reason,headers,data){
     
     switch(arguments.length){
       case 1:
@@ -129,8 +94,29 @@ Object.defineProperties(Event.prototype,{
         }else headers = {};
     }
     
-    return walk(send,[this,status,reason,headers,data]);
-  }},
+    if(this[sent]) throw new Error('Request already answered');
+    
+    if(!headers['Content-Type']){
+      if(this.headers['accept'] && this.headers['accept'].indexOf('application/ebjs') != -1){
+        data = yield ebjs.pack(data);
+        headers['Content-Type'] = 'application/ebjs';
+      }else{
+        data = new Buffer(JSON.stringify(data),'utf8');
+        headers['Content-Type'] = 'application/json; charset=utf-8';
+      }
+      
+      headers['Content-Length'] = data.length;
+    }
+    
+    headers['Access-Control-Allow-Origin'] = headers['Access-Control-Allow-Origin'] || '*';
+    
+    this.response.writeHead(status,reason,headers);
+    this.response.end(data);
+    
+    this[sent] = true;
+    
+  })},
+  
   getBody: {value: function(maxSize){
     var yd;
     
@@ -156,22 +142,27 @@ Object.defineProperties(Event.prototype,{
     
     return yd;
   }},
-  getJSON: {value: function(){
-    return walk(getJSON,[this.getBody(),this.encoding]);
-  }},
-  getQS: {value: function(){
-    return walk(getQS,[this.getBody(),this.encoding]);
-  }},
+  getJSON: {value: walk.wrap(function*(){
+    return JSON.parse((yield this.getBody()).toString(this.encoding));
+  })},
+  getEbjs: {value: walk.wrap(function*(){
+    return yield ebjs.unpack((yield this.getBody()));
+  })},
+  getQS: {value: walk.wrap(function*(){
+    return QS.parse((yield this.getBody()).toString(this.encoding));
+  })},
+  
   get: {value: function(){
     
     switch(this.mime){
-      case 'application/json':                  return walk(getJSON,[this.getBody(),this.encoding]);
-      case 'application/ebjs':                  return walk(getEbjs,[this.getBody()]);
-      case 'application/x-www-form-urlencoded': return walk(getQS,[this.getBody(),this.encoding]);
+      case 'application/json':                  return this.getJSON();
+      case 'application/ebjs':                  return this.getEbjs();
+      case 'application/x-www-form-urlencoded': return this.getQS();
       default:                                  return this.getBody();
     }
     
   }}
+  
 });
 
 // Hsm
