@@ -43,18 +43,31 @@ function Event(req,res,parsedUrl){
   }
 }
 
+function onError(e){
+  var yd,ops;
+  
+  this[bodyError] = e;
+  
+  ops = this.request[bodyOps];
+  this.request[bodyOps] = null;
+  
+  this.request[body] = null;
+  this.request[bodyDone] = null;
+  this.request[maxBodySize] = null;
+  
+  this.removeListener('data',onData);
+  this.removeListener('error',onError);
+  this.removeListener('close',onEnd);
+  this.removeListener('end',onEnd);
+  
+  while(yd = ops.shift()) yd.error = e;
+}
+
 function onData(data){
   var e;
   
   this[body] = Buffer.concat([this[body],data]);
-  
-  if(this[body].length > this[maxBodySize]){
-    this[bodyError] = e = new Error('Request body size too large');
-    while(yd = this[bodyOps].shift()) yd.error = e;
-    
-    this.removeListener('data',onData);
-    this.removeListener('end',onEnd);
-  }
+  if(this[body].length > this[maxBodySize]) this.emit('error',new Error('Request body size too large'));
 }
 
 function onEnd(){
@@ -121,16 +134,19 @@ Object.defineProperties(Event.prototype,{
     var yd;
     
     if(this.request[bodyError]) return new Yielded(this.request[bodyError]);
-    if(maxSize == null) maxSize = 10e3;
     if(this.request[bodyDone]) return new Yielded(this.request[body]);
+    
+    if(maxSize == null) maxSize = 10e3;
     
     if(!this.request[bodyOps]){
       this.request[bodyOps] = [];
       this.request[body] = new Buffer(0);
       this.request[bodyDone] = false;
       this.request[maxBodySize] = maxSize;
+      this.request[bodyError] = null;
       
       this.request.on('data',onData);
+      this.request.on('error',onError);
       this.request.on('close',onEnd);
       this.request.on('end',onEnd);
     }
@@ -142,23 +158,24 @@ Object.defineProperties(Event.prototype,{
     
     return yd;
   }},
-  getJSON: {value: walk.wrap(function*(){
-    return JSON.parse((yield this.getBody()).toString(this.encoding));
+  
+  getJSON: {value: walk.wrap(function*(maxSize){
+    return JSON.parse((yield this.getBody(maxSize)).toString(this.encoding));
   })},
-  getEbjs: {value: walk.wrap(function*(){
-    return yield ebjs.unpack((yield this.getBody()));
+  getEbjs: {value: walk.wrap(function*(maxSize){
+    return yield ebjs.unpack((yield this.getBody(maxSize)));
   })},
-  getQS: {value: walk.wrap(function*(){
-    return QS.parse((yield this.getBody()).toString(this.encoding));
+  getQS: {value: walk.wrap(function*(maxSize){
+    return QS.parse((yield this.getBody(maxSize)).toString(this.encoding));
   })},
   
-  get: {value: function(){
+  get: {value: function(maxSize){
     
     switch(this.mime){
-      case 'application/json':                  return this.getJSON();
-      case 'application/ebjs':                  return this.getEbjs();
-      case 'application/x-www-form-urlencoded': return this.getQS();
-      default:                                  return this.getBody();
+      case 'application/json':                  return this.getJSON(maxSize);
+      case 'application/ebjs':                  return this.getEbjs(maxSize);
+      case 'application/x-www-form-urlencoded': return this.getQS(maxSize);
+      default:                                  return this.getBody(maxSize);
     }
     
   }}
