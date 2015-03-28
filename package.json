@@ -4,11 +4,8 @@
   "description": "A utility which maps request events to pathname ones",
   "main": "main.js",
   "dependencies": {
-    "vz.rand": "",
-    "vse": "",
-    "vz.yielded": "",
-    "vz.walk": "",
-    "ebjs": ""
+    "u-su": "",
+    "y-emitter": ""
   },
   "devDependencies": {},
   "repository": {
@@ -18,6 +15,6 @@
   "bugs": {
     "url": "https://github.com/manvalls/hsm/issues"
   },
-  "author": "Manuel Valls Fernández <manolo@chatiku.com>",
+  "author": "Manuel Valls Fernández <manolo@vlrz.es>",
   "license": "LGPL-3.0"
 }

@@ -1,188 +1,16 @@
-var Su = require('vz.rand').Su,
-    Vse = require('vse'),
-    Yielded = require('vz.yielded'),
-    walk = require('vz.walk'),
-    ebjs = require('ebjs'),
-    
-    QS = require('querystring'),
+var Su = require('u-su'),
+    Emitter = require('y-emitter'),
     url = require('url'),
     
-    sent = Su(),
-    hsm = Su(),
+    hsm = '1VAXCeD8nIPITw3',
     
     from = Su(),
     to = Su(),
     ids = Su(),
     
-    bodyOps = Su(),
-    body = Su(),
-    bodyDone = Su(),
-    maxBodySize = Su(),
-    bodyError = Su(),
-    
-    ctRE = /([^;]+)(?:.*charset=(.*)(;.*)?)?/,
+    emitter = Su(),
     
     Hsm;
-
-// Event
-
-function Event(req,res,parsedUrl){
-  var m = req.headers['content-type'];
-  
-  this.url = parsedUrl;
-  this.request = req;
-  this.response = res;
-  
-  if(m){
-    m = m.match(ctRE);
-    this.encoding = m[2];
-    this.mime = m[1];
-  }else{
-    this.encoding = null;
-    this.mime = null;
-  }
-}
-
-function onError(e){
-  var yd,ops;
-  
-  this[bodyError] = e;
-  
-  ops = this.request[bodyOps];
-  this.request[bodyOps] = null;
-  
-  this.request[body] = null;
-  this.request[bodyDone] = null;
-  this.request[maxBodySize] = null;
-  
-  this.removeListener('data',onData);
-  this.removeListener('error',onError);
-  this.removeListener('close',onEnd);
-  this.removeListener('end',onEnd);
-  
-  while(yd = ops.shift()) yd.error = e;
-}
-
-function onData(data){
-  var e;
-  
-  this[body] = Buffer.concat([this[body],data]);
-  if(this[body].length > this[maxBodySize]) this.emit('error',new Error('Request body size too large'));
-}
-
-function onEnd(){
-  var yd;
-  
-  this[bodyDone] = true;
-  while(yd = this[bodyOps].shift()) yd.value = this[body];
-}
-
-Object.defineProperties(Event.prototype,{
-  
-  query: {get: function(){
-    return this.url.query;
-  }},
-  headers: {get: function(){
-    return this.request.headers;
-  }},
-  
-  send: {value: walk.wrap(function*(status,reason,headers,data){
-    
-    switch(arguments.length){
-      case 1:
-        data = status;
-        status = 200;
-        reason = '';
-        headers = {};
-      case 2:
-        data = reason;
-        reason = '';
-        headers = {};
-      case 3:
-        data = headers;
-        
-        if(reason.constructor != String){
-          headers = reason;
-          reason = '';
-        }else headers = {};
-    }
-    
-    if(this[sent]) throw new Error('Request already answered');
-    
-    if(!headers['Content-Type']){
-      if(this.headers['accept'] && this.headers['accept'].indexOf('application/ebjs') != -1){
-        data = yield ebjs.pack(data);
-        headers['Content-Type'] = 'application/ebjs';
-      }else{
-        data = new Buffer(JSON.stringify(data),'utf8');
-        headers['Content-Type'] = 'application/json; charset=utf-8';
-      }
-      
-      headers['Content-Length'] = data.length;
-    }
-    
-    headers['Access-Control-Allow-Origin'] = headers['Access-Control-Allow-Origin'] || '*';
-    
-    this.response.writeHead(status,reason,headers);
-    this.response.end(data);
-    
-    this[sent] = true;
-    
-  })},
-  
-  getBody: {value: function(maxSize){
-    var yd;
-    
-    if(this.request[bodyError]) return new Yielded(this.request[bodyError]);
-    if(this.request[bodyDone]) return new Yielded(this.request[body]);
-    
-    if(maxSize == null) maxSize = 10e3;
-    
-    if(!this.request[bodyOps]){
-      this.request[bodyOps] = [];
-      this.request[body] = new Buffer(0);
-      this.request[bodyDone] = false;
-      this.request[maxBodySize] = maxSize;
-      this.request[bodyError] = null;
-      
-      this.request.on('data',onData);
-      this.request.on('error',onError);
-      this.request.on('close',onEnd);
-      this.request.on('end',onEnd);
-    }
-    
-    this.request[maxBodySize] = Math.max(this.request[maxBodySize],maxSize)
-    
-    yd = new Yielded();
-    this.request[bodyOps].push(yd);
-    
-    return yd;
-  }},
-  
-  getJSON: {value: walk.wrap(function*(maxSize){
-    return JSON.parse((yield this.getBody(maxSize)).toString(this.encoding));
-  })},
-  getEbjs: {value: walk.wrap(function*(maxSize){
-    return yield ebjs.unpack((yield this.getBody(maxSize)));
-  })},
-  getQS: {value: walk.wrap(function*(maxSize){
-    return QS.parse((yield this.getBody(maxSize)).toString(this.encoding));
-  })},
-  
-  get: {value: function(maxSize){
-    
-    switch(this.mime){
-      case 'application/json':                  return this.getJSON(maxSize);
-      case 'application/ebjs':                  return this.getEbjs(maxSize);
-      case 'application/x-www-form-urlencoded': return this.getQS(maxSize);
-      default:                                  return this.getBody(maxSize);
-    }
-    
-  }}
-  
-});
-
-// Hsm
 
 Hsm = module.exports = function Hsm(server){
   if(server[hsm]) return server[hsm];
@@ -195,29 +23,43 @@ Hsm = module.exports = function Hsm(server){
   
   server[hsm] = this;
   
-  Vse.call(this);
+  Emitter.Target.call(this,emitter);
 };
 
 function onRequest(req,res){
-  var i,
-      href,
-      event,
-      parsedUrl;
+  var i,href,event,u,en,path,e,h;
   
-  href = req.url;
-  for(i = 0;i < this[hsm][from].length;i++){
-    href = href.replace(this[hsm][from][i],this[hsm][to][i]);
+  h = this[hsm];
+  e = h[emitter];
+  
+  href = decodeURI(req.url);
+  for(i = 0;i < h[from].length;i++){
+    href = href.replace(h[from][i],h[to][i]);
   }
   
-  parsedUrl = url.parse(href,true);
-  event = new Event(req,res,parsedUrl);
+  u = url.parse(href,true);
+  event = {
+    request: req,
+    response: res,
+    url: u
+  };
   
-  if(this[hsm].fire(req.method + ' ' + parsedUrl.pathname,event).length == 0){
-    if(this[hsm].fire(req.method + ' DEFAULT',event).length == 0) this[hsm].fire('DEFAULT',event);
+  en = req.method + ' ' + u.pathname;
+  if(h.listeners(en)) return e.give(en,event);
+  
+  path = u.pathname.split('/');
+  path.pop();
+  
+  while(path.length){
+    en = (req.method + ' ' + path.join('/')).trim();
+    if(h.listeners(en)) return e.give(en,event);
+    
+    path.pop();
   }
+  
 }
 
-Hsm.prototype = new Vse();
+Hsm.prototype = new Emitter.Target();
 Hsm.prototype.constructor = Hsm;
 
 Hsm.prototype.rewrite = function(f,t){
