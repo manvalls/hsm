@@ -27,7 +27,7 @@ Hsm = module.exports = function Hsm(server){
 };
 
 function onRequest(req,res){
-  var i,href,event,u,en,path,e,h;
+  var i,href,event,u,en,pn,path,e,h;
   
   h = this[hsm];
   e = h[emitter];
@@ -44,15 +44,17 @@ function onRequest(req,res){
     url: u
   };
   
-  en = req.method + ' ' + u.pathname;
+  en = req.method + ' ' + (pn = u.pathname);
   if(h.listeners(en)) return e.give(en,event);
+  if(h.listeners(pn)) return e.give(pn,event);
   
   path = u.pathname.split('/');
   path.pop();
   
   while(path.length){
-    en = (req.method + ' ' + path.join('/')).trim();
+    en = (req.method + ' ' + (pn = path.join('/'))).trim();
     if(h.listeners(en)) return e.give(en,event);
+    if(h.listeners(pn)) return e.give(pn,event);
     
     path.pop();
   }
