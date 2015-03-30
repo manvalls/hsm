@@ -1,6 +1,12 @@
 var Su = require('u-su'),
     Emitter = require('y-emitter'),
+    walk = require('y-walk'),
+    apply = require('u-proto/apply'),
+    Cb = require('y-callback/node'),
+    
     url = require('url'),
+    fs = require('fs'),
+    mime = require('./mime.js'),
     
     hsm = '1VAXCeD8nIPITw3',
     
@@ -18,7 +24,9 @@ var Su = require('u-su'),
 function Event(req,res,url,p,e){
   this.request = req;
   this.response = res;
+  
   this.url = url;
+  this.parts = [];
   
   this[path] = p;
   this[emitter] = e;
@@ -31,14 +39,68 @@ Object.defineProperties(Event.prototype,{
         e = this[emitter],
         en;
     
-    p.pop();
+    this.parts.unshift(p.pop());
     while(p.length){
       en = p.join('/');
       if(e.target.listeners(en)) return e.give(en,this);
-      p.pop();
+      this.parts.unshift(p.pop());
     }
     
-  }}
+  }},
+  
+  sendFile: {value: walk.wrap(function*(file,uMime){
+    var headers = {},
+        req = this.request,
+        res = this.response,
+        ext,ef,m,cb,stats;
+    
+    while(m = ef.match(/([^\/]*)\.([^\.]*)$/)){
+      ef = m[1];
+      ext = m[2];
+      
+      if(mime[ext]) headers[apply](mime[ext]);
+      if(uMime && uMime[ext]) headers[apply](uMime[ext]);
+    }
+    
+    headers['Content-Type'] = headers['Content-Type'] || 'application/octet-stream';
+    
+    if(
+        req.headers['accept-encoding'] &&
+        req.headers['accept-encoding'].indexOf('gzip') != -1
+      ) try{
+      
+      fs.stat(file + '.gz',cb = Cb());
+      stats = yield cb;
+      headers['Content-Encoding'] = 'gzip';
+      
+    }catch(e){
+      fs.stat(file,cb = Cb());
+      stats = yield cb;
+    }
+    
+    if(req.headers['if-modified-since']){
+      date = new Date(req.headers['if-modified-since']);
+      
+      if(date >= stats.mtime){
+        res.writeHead(304);
+        res.end();
+        return;
+      }
+    }
+    
+    headers['Last-Modified'] = stats.mtime.toUTCString();
+    headers['Content-Length'] = stats.size;
+    
+    if(req.method == 'HEAD'){
+      res.writeHead(200,headers);
+      res.end();
+      return;
+    }
+    
+    res.writeHead(200,headers);
+    fs.createReadStream(file).pipe(res);
+    
+  })}
   
 });
 
