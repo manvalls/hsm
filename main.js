@@ -6,7 +6,7 @@ var Su = require('u-su'),
     
     from = Su(),
     to = Su(),
-    ids = Su(),
+    map = Su(),
     
     emitter = Su(),
     
@@ -19,12 +19,24 @@ Hsm = module.exports = function Hsm(server){
   
   this[from] = [];
   this[to] = [];
-  this[ids] = [];
+  this[map] = {};
   
   server[hsm] = this;
   
   Emitter.Target.call(this,emitter);
 };
+
+function rewrite(href,map,from,to){
+  var ph,i;
+  
+  if(href in map) return rewrite(href,map,from,to);
+  
+  ph = href;
+  for(i = 0;i < from.length;i++) href = href.replace(from[i],to[i]);
+  
+  if(href != ph) return rewrite(href,map,from,to);
+  return href;
+}
 
 function onRequest(req,res){
   var i,href,event,u,en,path,e,h;
@@ -32,10 +44,7 @@ function onRequest(req,res){
   h = this[hsm];
   e = h[emitter];
   
-  href = decodeURI(req.url);
-  for(i = 0;i < h[from].length;i++){
-    href = href.replace(h[from][i],h[to][i]);
-  }
+  href = rewrite(decodeURI(req.url),h[map],h[from],h[to]);
   
   u = url.parse(href,true);
   event = {
@@ -61,23 +70,29 @@ function onRequest(req,res){
 Hsm.prototype = new Emitter.Target();
 Hsm.prototype.constructor = Hsm;
 
-Hsm.prototype.rewrite = function(f,t){
-  var id = {};
+Hsm.prototype.rewrite = function(key,value){
+  var i;
   
-  this[from].push(f);
-  this[to].push(t);
-  this[ids].push(id);
+  if(key instanceof RegExp){
+    i = this[from].indexOf(key);
+    if(i == -1){
+      this[from].push(key);
+      this[to].push(value);
+    }else this[to][i] = value;
+  }else this[map][key + ''] = value + '';
   
-  return id;
 };
 
-Hsm.prototype.unrewrite = function(id){
-  var i = this[ids].indexOf(id);
+Hsm.prototype.unrewrite = function(key){
+  var i;
   
-  if(i != -1){
-    this[from].splice(i,1);
-    this[to].splice(i,1);
-    this[ids].splice(i,1);
-  }
+  if(key instanceof RegExp){
+    i = this[from].indexOf(key);
+    if(i != -1){
+      this[from].splice(i,1);
+      this[to].splice(i,1);
+    }
+  }else delete this[map][key + ''];
+  
 }
 
