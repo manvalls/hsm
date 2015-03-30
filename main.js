@@ -9,8 +9,40 @@ var Su = require('u-su'),
     map = Su(),
     
     emitter = Su(),
+    path = Su(),
     
     Hsm;
+
+// Event
+
+function Event(req,res,url,p,e){
+  this.request = req;
+  this.response = res;
+  this.url = url;
+  
+  this[path] = p;
+  this[emitter] = e;
+}
+
+Object.defineProperties(Event.prototype,{
+  
+  next: {value: function(){
+    var p = this[path],
+        e = this[emitter],
+        en;
+    
+    p.pop();
+    while(p.length){
+      en = p.join('/');
+      if(e.target.listeners(en)) return e.give(en,this);
+      p.pop();
+    }
+    
+  }}
+  
+});
+
+// Hsm
 
 Hsm = module.exports = function Hsm(server){
   if(server[hsm]) return server[hsm];
@@ -47,24 +79,12 @@ function onRequest(req,res){
   href = rewrite(decodeURI(req.url),h[map],h[from],h[to]);
   
   u = url.parse(href,true);
-  event = {
-    request: req,
-    response: res,
-    url: u
-  };
+  event = new Event(req,res,u,u.pathname.split('/'),e);
   
   en = req.method + ' ' + u.pathname;
   if(h.listeners(en)) return e.give(en,event);
   
-  path = u.pathname.split('/');
-  path.pop();
-  
-  while(path.length){
-    en = path.join('/');
-    if(h.listeners(en)) return e.give(en,event);
-    path.pop();
-  }
-  
+  event.next();
 }
 
 Hsm.prototype = new Emitter.Target();
