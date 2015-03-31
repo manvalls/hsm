@@ -54,6 +54,23 @@ Object.defineProperties(Event.prototype,{
         res = this.response,
         ext,ef,m,cb,stats;
     
+    if(
+        req.headers['accept-encoding'] &&
+        req.headers['accept-encoding'].indexOf('gzip') != -1
+      ) try{
+      
+      fs.stat(file + '.gz',cb = Cb());
+      stats = yield cb;
+      
+      headers['Content-Encoding'] = 'gzip';
+      file = file + '.gz';
+      
+    }catch(e){
+      fs.stat(file,cb = Cb());
+      stats = yield cb;
+    }
+    
+    ef = file;
     while(m = ef.match(/([^\/]*)\.([^\.]*)$/)){
       ef = m[1];
       ext = m[2];
@@ -63,20 +80,6 @@ Object.defineProperties(Event.prototype,{
     }
     
     headers['Content-Type'] = headers['Content-Type'] || 'application/octet-stream';
-    
-    if(
-        req.headers['accept-encoding'] &&
-        req.headers['accept-encoding'].indexOf('gzip') != -1
-      ) try{
-      
-      fs.stat(file + '.gz',cb = Cb());
-      stats = yield cb;
-      headers['Content-Encoding'] = 'gzip';
-      
-    }catch(e){
-      fs.stat(file,cb = Cb());
-      stats = yield cb;
-    }
     
     if(req.headers['if-modified-since']){
       date = new Date(req.headers['if-modified-since']);
