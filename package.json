@@ -1,6 +1,6 @@
 {
   "name": "hsm",
-  "version": "3.2.1",
+  "version": "3.3.0",
   "description": "A utility which maps request events to pathname ones",
   "main": "main.js",
   "dependencies": {
