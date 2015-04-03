@@ -43,6 +43,7 @@ Object.defineProperties(Event.prototype,{
     while(p.length){
       en = p.join('/');
       if(e.target.listeners(en)) return e.give(en,this);
+      
       this.parts.unshift(p.pop());
     }
     
@@ -112,6 +113,9 @@ Object.defineProperties(Event.prototype,{
 Hsm = module.exports = function Hsm(server){
   if(server[hsm]) return server[hsm];
   
+  Emitter.Target.call(this,emitter);
+  this[emitter].syn('','request');
+  
   server.on('request',onRequest);
   
   this[from] = [];
@@ -120,7 +124,6 @@ Hsm = module.exports = function Hsm(server){
   
   server[hsm] = this;
   
-  Emitter.Target.call(this,emitter);
 };
 
 function rewrite(href,map,from,to){
