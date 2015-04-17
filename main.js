@@ -66,7 +66,9 @@ Object.defineProperties(Event.prototype,{
       headers['Content-Encoding'] = 'gzip';
       file = file + '.gz';
       
-    }catch(e){
+    }catch(e){}
+    
+    if(!stats){
       fs.stat(file,cb = Cb());
       stats = yield cb;
     }
