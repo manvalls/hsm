@@ -49,11 +49,16 @@ Object.defineProperties(Event.prototype,{
     
   }},
   
-  sendFile: {value: walk.wrap(function*(file,uMime){
+  sendFile: {value: walk.wrap(function*(file,code,uMime){
     var headers = {},
         req = this.request,
         res = this.response,
         ext,ef,m,cb,stats;
+    
+    if(typeof code != 'number'){
+      uMime = code;
+      code = 200;
+    }
     
     if(
         req.headers['accept-encoding'] &&
@@ -98,12 +103,12 @@ Object.defineProperties(Event.prototype,{
     headers['Content-Length'] = stats.size;
     
     if(req.method == 'HEAD'){
-      res.writeHead(200,headers);
+      res.writeHead(code,headers);
       res.end();
       return;
     }
     
-    res.writeHead(200,headers);
+    res.writeHead(code,headers);
     fs.createReadStream(file).pipe(res);
     
   })}
