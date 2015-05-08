@@ -120,7 +120,7 @@ Object.defineProperties(Event.prototype,{
 Hsm = module.exports = function Hsm(server,host){
   
   host = host || '';
-  server[hsm] = sever[hsm] || {};
+  server[hsm] = server[hsm] || {};
   if(server[hsm][host]) return server[hsm][host];
   
   Emitter.Target.call(this,emitter);
