@@ -49,16 +49,15 @@ Object.defineProperties(Event.prototype,{
     
   }},
   
-  sendFile: {value: walk.wrap(function*(file,code,uMime){
-    var headers = {},
+  sendFile: {value: walk.wrap(function*(file,opt){
+    var headers = (opt = opt || {}).headers || {},
+        uMime = opt.mime,
+        code = opt.code || 200,
+        
         req = this.request,
         res = this.response,
+        
         ext,ef,m,cb,stats;
-    
-    if(typeof code != 'number'){
-      uMime = code;
-      code = 200;
-    }
     
     if(
         req.headers['accept-encoding'] &&
