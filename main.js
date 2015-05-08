@@ -77,6 +77,8 @@ Object.defineProperties(Event.prototype,{
       stats = yield cb;
     }
     
+    if(stats.isDirectory()) throw new Error('Not a file');
+    
     ef = file;
     while(m = ef.match(/([^\/]*)\.([^\.]*)$/)){
       ef = m[1];
