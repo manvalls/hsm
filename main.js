@@ -162,7 +162,7 @@ Object.defineProperties(Event.prototype,{
     }
     
     res.writeHead(code,headers);
-    fs.createReadStream(file).pipe(res);
+    fs.createReadStream(file,{start: start, end: end}).pipe(res);
     
   })}
   
