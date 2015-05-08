@@ -117,8 +117,11 @@ Object.defineProperties(Event.prototype,{
 
 // Hsm
 
-Hsm = module.exports = function Hsm(server){
-  if(server[hsm]) return server[hsm];
+Hsm = module.exports = function Hsm(server,host){
+  
+  host = host || '';
+  server[hsm] = sever[hsm] || {};
+  if(server[hsm][host]) return server[hsm][host];
   
   Emitter.Target.call(this,emitter);
   this[emitter].syn('','request');
@@ -129,7 +132,7 @@ Hsm = module.exports = function Hsm(server){
   this[to] = [];
   this[map] = {};
   
-  server[hsm] = this;
+  server[hsm][host] = this;
   
 };
 
@@ -148,7 +151,7 @@ function rewrite(href,map,from,to){
 function onRequest(req,res){
   var i,href,event,u,en,path,e,h;
   
-  h = this[hsm];
+  h = this[hsm][req.headers.host] || this[hsm][''];
   e = h[emitter];
   
   href = rewrite(decodeURI(req.url),h[map],h[from],h[to]);
