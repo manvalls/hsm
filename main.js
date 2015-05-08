@@ -242,11 +242,13 @@ Hsm.prototype.unrewrite = function(key){
   var i;
   
   if(key instanceof RegExp){
+    
     i = this[from].indexOf(key);
     if(i != -1){
       this[from].splice(i,1);
       this[to].splice(i,1);
     }
+    
   }else delete this[map][key + ''];
   
 }
