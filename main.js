@@ -50,8 +50,8 @@ Object.defineProperties(Event.prototype,{
   }},
   
   sendFile: {value: walk.wrap(function*(file,opt){
-    var headers = (opt = opt || {}).headers || {},
-        uMime = opt.mime,
+    var headers = {},
+        uMime = (opt = opt || {}).mime,
         code = opt.code || 200,
         
         req = this.request,
@@ -156,6 +156,8 @@ Object.defineProperties(Event.prototype,{
     headers['Accept-Ranges'] = 'bytes';
     headers['Last-Modified'] = stats.mtime.toUTCString();
     headers['Content-Length'] = size;
+    
+    if(opt.headers) headers[apply](opt.headers);
     
     if(req.method == 'HEAD'){
       res.writeHead(code,headers);
