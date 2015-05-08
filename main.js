@@ -57,7 +57,7 @@ Object.defineProperties(Event.prototype,{
         req = this.request,
         res = this.response,
         
-        ext,ef,m,cb,stats;
+        ext,ef,m,cb,stats,start,end,range,size;
     
     if(
         req.headers['accept-encoding'] &&
@@ -98,8 +98,62 @@ Object.defineProperties(Event.prototype,{
       }
     }
     
+    if(req.headers['if-unmodified-since']){
+      date = new Date(req.headers['if-unmodified-since']);
+      
+      if(date < stats.mtime){
+        res.writeHead(412);
+        res.end();
+        return;
+      }
+    }
+    
+    start = 0;
+    end = stats.size - 1;
+    
+    if(req.headers.range) top: {
+      
+      if(req.headers['if-range']){
+        date = new Date(req.headers['if-range']);
+        if(date < stats.mtime) break top;
+      }
+      
+      range = req.headers.range.replace('bytes=','').split('-');
+      
+      if(range.length != 2) break top;
+      if(!(range[0] || range[1])) break top;
+      
+      if(!range[0]){
+        start = end - range[1] + 1;
+        break top;
+      }
+      
+      if(!range[1]){
+        start = parseInt(range[0]);
+        break top;
+      }
+      
+      start = parseInt(range[0]);
+      end = parseInt(range[1]);
+      
+    }
+    
+    size = end - start + 1;
+    
+    if(start < 0 || end < start || size > stats.size){
+      res.writeHead(416);
+      res.end();
+      return;
+    }
+    
+    if(size != stats.size){
+      headers['Content-Range'] = start + '-' + end + '/' + stats.size;
+      code = 206;
+    }
+    
+    headers['Accept-Ranges'] = 'bytes';
     headers['Last-Modified'] = stats.mtime.toUTCString();
-    headers['Content-Length'] = stats.size;
+    headers['Content-Length'] = size;
     
     if(req.method == 'HEAD'){
       res.writeHead(code,headers);
