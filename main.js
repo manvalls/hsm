@@ -152,6 +152,8 @@ function onRequest(req,res){
   var i,href,event,u,en,path,e,h;
   
   h = this[hsm][req.headers.host] || this[hsm][''];
+  if(!h) return;
+  
   e = h[emitter];
   
   href = rewrite(decodeURI(req.url),h[map],h[from],h[to]);
