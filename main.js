@@ -50,8 +50,8 @@ Object.defineProperties(Event.prototype,{
   }},
   
   sendFile: {value: walk.wrap(function*(file,opt){
-    var headers = {},
-        uMime = (opt = opt || {}).mime,
+    var headers = (opt = opt || {}).headers || {},
+        uMime = opt.mime,
         code = opt.code || 200,
         
         req = this.request,
@@ -79,16 +79,20 @@ Object.defineProperties(Event.prototype,{
     
     if(stats.isDirectory()) throw new Error('Not a file');
     
-    ef = file;
-    while(m = ef.match(/([^\/]*)\.([^\.]*)$/)){
-      ef = m[1];
-      ext = m[2];
+    if(!headers['Content-Type']){
       
-      if(mime[ext]) headers[apply](mime[ext]);
-      if(uMime && uMime[ext]) headers[apply](uMime[ext]);
+      ef = file;
+      while(m = ef.match(/([^\/]*)\.([^\.]*)$/)){
+        ef = m[1];
+        ext = m[2];
+        
+        if(mime[ext]) headers[apply](mime[ext]);
+        if(uMime && uMime[ext]) headers[apply](uMime[ext]);
+      }
+      
+      headers['Content-Type'] = headers['Content-Type'] || 'application/octet-stream';
+      
     }
-    
-    headers['Content-Type'] = headers['Content-Type'] || 'application/octet-stream';
     
     if(req.headers['if-modified-since']){
       date = new Date(req.headers['if-modified-since']);
@@ -156,8 +160,6 @@ Object.defineProperties(Event.prototype,{
     headers['Accept-Ranges'] = 'bytes';
     headers['Last-Modified'] = stats.mtime.toUTCString();
     headers['Content-Length'] = size;
-    
-    if(opt.headers) headers[apply](opt.headers);
     
     if(req.method == 'HEAD'){
       res.writeHead(code,headers);
