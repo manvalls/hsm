@@ -5,6 +5,7 @@ var Su = require('u-su'),
     Cb = require('y-callback/node'),
     
     url = require('url'),
+    QS = require('querystring'),
     fs = require('fs'),
     mime = require('./mime.js'),
     
@@ -27,6 +28,9 @@ function Event(req,res,url,p,e){
   
   this.url = url;
   this.parts = [];
+  
+  if(req.headers.cookie) this.cookies = QS.parse(req.headers.cookie.trim(),'; ','=');
+  else this.cookies = {};
   
   this[path] = p;
   this[emitter] = e;
