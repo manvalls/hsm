@@ -9,8 +9,8 @@ var Hsm = require('hsm'),
 
 server.listen(12345);
 
-hsm.on('GET /foo',function(e){
-  e.request.end('Hello world!');
+hsm.on('/foo',function(e){
+  e.response.end('bar');
 });
 ```
 

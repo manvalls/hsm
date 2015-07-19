@@ -4,11 +4,11 @@
   "description": "A utility which maps request events to pathname ones",
   "main": "main.js",
   "dependencies": {
-    "u-su": "",
+    "path-event": "",
+    "y-emitter": "",
     "u-proto": "",
     "y-walk": "",
-    "y-callback": "",
-    "y-emitter": ""
+    "y-callback": ""
   },
   "devDependencies": {},
   "repository": {

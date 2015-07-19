@@ -1,263 +1,304 @@
-var Su = require('u-su'),
+var PathEvent = require('path-event'),
     Emitter = require('y-emitter'),
-    walk = require('y-walk'),
+    define = require('u-proto/define'),
     apply = require('u-proto/apply'),
+    walk = require('y-walk'),
     Cb = require('y-callback/node'),
-    
+
     url = require('url'),
     QS = require('querystring'),
     fs = require('fs'),
     mime = require('./mime.js'),
-    
-    hsm = '1VAXCeD8nIPITw3',
-    
-    from = Su(),
-    to = Su(),
-    map = Su(),
-    
-    emitter = Su(),
-    path = Su(),
-    
-    Hsm;
 
-// Event
+    from = Symbol(),
+    to = Symbol(),
+    map = Symbol(),
+    emitter = Symbol(),
 
-function Event(req,res,url,p,e){
-  this.request = req;
-  this.response = res;
-  
-  this.url = url;
-  this.parts = [];
-  
-  if(req.headers.cookie) this.cookies = QS.parse(req.headers.cookie.trim(),'; ','=');
-  else this.cookies = {};
-  
-  this[path] = p;
-  this[emitter] = e;
-}
+    hsm = 'cC8SHA-a63Gt',
 
-Object.defineProperties(Event.prototype,{
-  
-  next: {value: function(){
-    var p = this[path],
-        e = this[emitter],
-        en;
-    
-    this.parts.unshift(p.pop());
-    while(p.length){
-      en = p.join('/');
-      if(e.target.listeners(en)) return e.give(en,this);
-      
-      this.parts.unshift(p.pop());
-    }
-    
-  }},
-  
-  sendFile: {value: walk.wrap(function*(file,opt){
-    var headers = (opt = opt || {}).headers || {},
-        uMime = opt.mime,
-        code = opt.code || 200,
-        
-        req = this.request,
-        res = this.response,
-        
-        ext,ef,m,cb,stats,start,end,range,size;
-    
-    if(
-        req.headers['accept-encoding'] &&
-        req.headers['accept-encoding'].indexOf('gzip') != -1
-      ) try{
-      
-      fs.stat(file + '.gz',cb = Cb());
-      stats = yield cb;
-      
-      headers['Content-Encoding'] = 'gzip';
-      file = file + '.gz';
-      
-    }catch(e){}
-    
-    if(!stats){
-      fs.stat(file,cb = Cb());
-      stats = yield cb;
-    }
-    
-    if(stats.isDirectory()) throw new Error('Not a file');
-    
-    if(!headers['Content-Type']){
-      
-      ef = file;
-      while(m = ef.match(/([^\/]*)\.([^\.]*)$/)){
-        ef = m[1];
-        ext = m[2];
-        
-        if(mime[ext]) headers[apply](mime[ext]);
-        if(uMime && uMime[ext]) headers[apply](uMime[ext]);
-      }
-      
-      headers['Content-Type'] = headers['Content-Type'] || 'application/octet-stream';
-      
-    }
-    
-    if(req.headers['if-modified-since']){
-      date = new Date(req.headers['if-modified-since']);
-      
-      if(date >= stats.mtime){
-        res.writeHead(304);
-        res.end();
-        return;
-      }
-    }
-    
-    if(req.headers['if-unmodified-since']){
-      date = new Date(req.headers['if-unmodified-since']);
-      
-      if(date < stats.mtime){
-        res.writeHead(412);
-        res.end();
-        return;
-      }
-    }
-    
-    start = 0;
-    end = stats.size - 1;
-    
-    if(req.headers.range) top: {
-      
-      if(req.headers['if-range']){
-        date = new Date(req.headers['if-range']);
-        if(date < stats.mtime) break top;
-      }
-      
-      range = req.headers.range.replace('bytes=','').split('-');
-      
-      if(range.length != 2) break top;
-      if(!(range[0] || range[1])) break top;
-      
-      if(!range[0]){
-        start = end - range[1] + 1;
-        break top;
-      }
-      
-      if(!range[1]){
-        start = parseInt(range[0]);
-        break top;
-      }
-      
-      start = parseInt(range[0]);
-      end = parseInt(range[1]);
-      
-    }
-    
-    size = end - start + 1;
-    
-    if(start < 0 || end < start || size > stats.size){
-      res.writeHead(416);
-      res.end();
-      return;
-    }
-    
-    if(size != stats.size){
-      headers['Content-Range'] = start + '-' + end + '/' + stats.size;
-      code = 206;
-    }
-    
-    headers['Accept-Ranges'] = 'bytes';
-    headers['Last-Modified'] = stats.mtime.toUTCString();
-    headers['Content-Length'] = size;
-    
-    if(req.method == 'HEAD'){
-      res.writeHead(code,headers);
-      res.end();
-      return;
-    }
-    
-    res.writeHead(code,headers);
-    fs.createReadStream(file,{start: start, end: end}).pipe(res);
-    
-  })}
-  
-});
+    getFinalFile;
 
-// Hsm
+// Hsm object
 
-Hsm = module.exports = function Hsm(server,host){
-  
+function Hsm(server,host){
+
   host = host || '';
   server[hsm] = server[hsm] || {};
   if(server[hsm][host]) return server[hsm][host];
-  
+
   Emitter.Target.call(this,emitter);
-  this[emitter].syn('','request');
-  
-  server.on('request',onRequest);
-  
+
   this[from] = [];
   this[to] = [];
   this[map] = {};
-  
-  server[hsm][host] = this;
-  
-};
 
-function rewrite(href,map,from,to){
-  var ph,i;
-  
-  if(href in map) return rewrite(href,map,from,to);
-  
-  ph = href;
-  for(i = 0;i < from.length;i++) href = href.replace(from[i],to[i]);
-  
-  if(href != ph) return rewrite(href,map,from,to);
-  return href;
+  server[hsm][host] = this;
+  server.on('request',onRequest);
+
+}
+
+Hsm.prototype = Object.create(Emitter.Target.prototype);
+
+Hsm.isHsm = 'cWxHkA-NbDtE';
+Hsm.prototype[define](Hsm.isHsm,true);
+
+Hsm.prototype[define]({
+
+  constructor: Hsm,
+
+  compute: function(path){
+    var computed = path,
+        i;
+
+    if(path in this[map]) computed = this[map][computed];
+    else for(i = 0;i < this[from].length;i++)
+      computed = computed.replace(this[from][i],this[to][i]);
+
+    if(computed != path) return this.compute(computed);
+    return computed;
+  },
+
+  rewrite: function(oldPath,newPath){
+    var i;
+
+    if(oldPath instanceof RegExp){
+
+      i = this[from].indexOf(oldPath);
+
+      if(i == -1){
+        this[from].push(oldPath);
+        this[to].push(newPath);
+      }else this[to][i] = newPath;
+
+    }else this[map][oldPath + ''] = newPath + '';
+
+  },
+
+  unrewrite: function(oldPath){
+    var i;
+
+    if(oldPath instanceof RegExp){
+
+      i = this[from].indexOf(oldPath);
+      if(i != -1){
+        this[from].splice(i,1);
+        this[to].splice(i,1);
+      }
+
+    }else delete this[map][oldPath + ''];
+
+  }
+
+});
+
+// Request listener
+
+function encodeCookie(m,c,end){
+  return '=' + encodeURIComponent(c) + end;
 }
 
 function onRequest(req,res){
-  var i,href,event,u,en,path,e,h;
-  
+  var h,u,path,e,c;
+
   h = this[hsm][req.headers.host] || this[hsm][''];
   if(!h) return;
-  
-  e = h[emitter];
-  
-  href = rewrite(decodeURI(req.url),h[map],h[from],h[to]);
-  
-  u = url.parse(href,true);
-  event = new Event(req,res,u,u.pathname.split('/'),e);
-  
-  en = req.method + ' ' + u.pathname;
-  if(h.listeners(en)) return e.give(en,event);
-  
-  event.next();
+
+  path = h.compute(decodeURI(req.url));
+  u = url.parse(path,true);
+
+  e = new Event(u.pathname,h[emitter]);
+
+  e.request = req;
+  e.response = res;
+
+  e.hash = u.hash;
+  e.search = u.search;
+  e.query = u.query;
+  e.pathname = u.pathname;
+  e.path = u.path;
+  e.href = u.href;
+
+  c = req.headers.cookie || '';
+  c = c.trim();
+  c = c.replace(/="(.*?)"(;|$)/g,encodeCookie);
+  c = c.replace(/; /g,';');
+
+  e.cookies = QS.parse(c,';','=');
+  e.next();
 }
 
-Hsm.prototype = new Emitter.Target();
-Hsm.prototype.constructor = Hsm;
+// Event
 
-Hsm.prototype.rewrite = function(key,value){
-  var i;
-  
-  if(key instanceof RegExp){
-    i = this[from].indexOf(key);
-    if(i == -1){
-      this[from].push(key);
-      this[to].push(value);
-    }else this[to][i] = value;
-  }else this[map][key + ''] = value + '';
-  
-};
+function Event(path,emitter){
+  PathEvent.call(this,path,emitter);
+}
 
-Hsm.prototype.unrewrite = function(key){
-  var i;
-  
-  if(key instanceof RegExp){
-    
-    i = this[from].indexOf(key);
-    if(i != -1){
-      this[from].splice(i,1);
-      this[to].splice(i,1);
+Event.prototype = Object.create(PathEvent.prototype);
+Event.prototype[define]({
+
+  constructor: Event,
+
+  sendFile: walk.wrap(function*(file,opt){
+    var temp,stats,headers,cb,range,code,
+        size;
+
+    opt = opt || {};
+    headers = opt.headers || {};
+    code = opt.code || 200;
+
+    if(opt.staticGzip !== false){
+      temp = yield getFinalFileAndStats(file,this.request);
+      file = temp[0];
+      stats = temp[1];
+    }else{
+      fs.stat(file,cb = Cb());
+      stats = yield cb;
     }
-    
-  }else delete this[map][key + ''];
-  
+
+    if(opt.applyMimeHeaders !== false)
+      populateMimeHeaders(file,headers,opt.mimeHeaders);
+
+    if(dateCheckFailed(this.request,this.response,stats)) return;
+
+    if(code == 200){
+
+      headers['Accept-Ranges'] = 'bytes';
+      headers['Last-Modified'] = stats.mtime.toUTCString();
+
+      range = getRange(this.request,stats);
+      if(!validRange(range,stats)){
+        this.response.writeHead(416);
+        this.response.end();
+        return;
+      }
+
+    }else range = [0,stats.size - 1];
+
+    size = range[1] - range[0] + 1;
+    if(size != stats.size){
+      headers['Content-Range'] = range[0] + '-' + range[1] + '/' + stats.size;
+      code = 206;
+    }
+
+    headers['Content-Length'] = size;
+
+    this.response.writeHead(code,headers);
+    if(this.request.method == 'HEAD') return this.response.end();
+
+    fs.createReadStream(file,{start: start, end: end}).pipe(this.response);
+  })
+
+});
+
+// - sendFile utils
+
+getFinalFileAndStats = walk.wrap(function*(file,req){
+  var enc = req.headers['accept-encoding'],
+      cb,stats,gzFile;
+
+  if(enc && enc.indexOf('gzip') != -1) try{
+
+    gzFile = file + 'gz';
+
+    fs.stat(gzFile,cb = Cb());
+
+    stats = yield cb;
+    file = gzFile;
+
+  }catch(e){}
+
+  if(!stats){
+    fs.stat(file,cb = Cb());
+    stats = yield cb;
+  }
+
+  return [file, stats];
+});
+
+function populateMimeHeaders(file,headers,customMime){
+  var i,lastPart,dotParts,ext;
+
+  customMime = customMime || {};
+
+  i = file.lastIndexOf('/');
+  if(i == -1) lastPart = file;
+  else lastPart = file.slice(i + 1);
+
+  dotParts = lastPart.split('.');
+
+  for(i = 1;i < dotParts.length;i++){
+    ext = dotParts[i];
+
+    if(mime[ext]) headers[apply](mime[ext]);
+    if(customMime[ext]) headers[apply](customMime[ext]);
+  }
+
 }
 
+function dateCheckFailed(req,res,stats){
+  var date;
+
+  if(req.headers['if-modified-since']){
+    date = new Date(req.headers['if-modified-since']);
+
+    if(date >= stats.mtime){
+      res.writeHead(304);
+      res.end();
+      return true;
+    }
+  }
+
+  if(req.headers['if-unmodified-since']){
+    date = new Date(req.headers['if-unmodified-since']);
+
+    if(date < stats.mtime){
+      res.writeHead(412);
+      res.end();
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function getRange(req,stats){
+  var start,end,date,splittedRange,range;
+
+  start = 0;
+  end = stats.size - 1;
+
+  if(!req.headers.range) return [start,end];
+
+  if(req.headers['if-range']){
+    date = new Date(req.headers['if-range']);
+    if(date < stats.mtime) return [start,end];
+  }
+
+  splittedRange = req.headers.range.split('=');
+  if(splittedRange[0] != 'bytes' || !splittedRange[1]) return [start,end];
+
+  range = splittedRange[1].split('-');
+
+  if(range.length != 2) return [start,end];
+  if(!(range[0] || range[1])) return [start,end];
+
+  if(!range[0]){
+    start = end - parseInt(range[1]) + 1;
+    return [start,end];
+  }
+
+  if(!range[1]){
+    start = parseInt(range[0]);
+    return [start,end];
+  }
+
+  start = parseInt(range[0]);
+  end = parseInt(range[1]);
+
+  return [start,end];
+}
+
+function validRange(range,stats){
+  return range[0] >= 0 && range[1] < stats.size && range[1] > range[0];
+}
