@@ -302,3 +302,7 @@ function getRange(req,stats){
 function validRange(range,stats){
   return range[0] >= 0 && range[1] < stats.size && range[1] > range[0];
 }
+
+// exports
+
+module.exports = Hsm;
