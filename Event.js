@@ -55,19 +55,20 @@ Event.prototype[define]({
 
     c = this[request].headers.cookie || '';
     c = c.trim();
-    c = c.replace(/="(.*?)"(;|$)/g,encodeCookie);
+    c = c.replace(/"((?:[^"]|(?:\\.))*)"/g,encode);
     c = c.replace(/; /g,';');
 
     this[cookies] = Object.freeze(QS.parse(c,';','='));
     return this[cookies];
   },
 
-  sendFile: require('./Event/sendFile.js')
+  sendFile: require('./Event/sendFile.js'),
+  accept: require('./Event/accept.js')
 
 });
 
-function encodeCookie(m,c,end){
-  return '=' + encodeURIComponent(c) + end;
+function encode(m,s1){
+  return encodeURIComponent(s1);
 }
 
 /*/ exports /*/
