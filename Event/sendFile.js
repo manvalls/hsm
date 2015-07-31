@@ -2,7 +2,7 @@ var walk = require('y-walk'),
     apply = require('u-proto/apply'),
     Cb = require('y-callback/node'),
     fs = require('fs'),
-    mime = require('./mime.js'),
+    mime = require('./sendFile/mime.js'),
 
     sendFile, getFinalFileAndStats;
 

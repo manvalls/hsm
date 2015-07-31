@@ -63,7 +63,10 @@ Event.prototype[define]({
   },
 
   sendFile: require('./Event/sendFile.js'),
-  accept: require('./Event/accept.js')
+  accept: require('./Event/accept.js'),
+  charset: require('./Event/charset.js'),
+  encoding: require('./Event/encoding.js'),
+  language: require('./Event/language.js'),
 
 });
 
