@@ -9,8 +9,10 @@ var Hsm = require('hsm'),
 
 server.listen(12345);
 
-hsm.on('/foo',function(e){
+hsm.on('/foo',function([e]){
+  yield e.handle();
   e.response.end('bar');
 });
-```
 
+hsm.digest();
+```
