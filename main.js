@@ -8,6 +8,8 @@ var Emitter = require('y-emitter'),
     map = Symbol(),
     emitter = Symbol(),
 
+    maximum = Symbol(),
+
     hsm = 'cC8SHA-a63Gt';
 
 // Hsm object
@@ -19,6 +21,8 @@ function Hsm(server,host){
   if(server[hsm][host]) return server[hsm][host];
 
   Emitter.Target.call(this,emitter);
+
+  this[maximum] = 0;
 
   this[from] = [];
   this[to] = [];
@@ -37,6 +41,17 @@ Hsm.prototype[define](Hsm.isHsm,true);
 Hsm.prototype[define]({
 
   constructor: Hsm,
+
+  digest: function(){
+    var max = 0,
+        event;
+
+    for(event of this.events()) max = Math.max(max,
+      (event + '').split('/').length
+    );
+
+    this[maximum] = max;
+  },
 
   compute: function(path){
     var computed = path,
@@ -92,8 +107,7 @@ function onRequest(req,res){
   if(!h) return;
 
   path = h.compute(decodeURI(req.url));
-  e = new Event(req,res,path,h[emitter]);
-  e.next();
+  e = new Event(req,res,path,h[emitter],h[maximum]);
 }
 
 /*/ exports /*/
