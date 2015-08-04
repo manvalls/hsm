@@ -108,6 +108,7 @@ function onRequest(req,res){
 
   path = h.compute(decodeURI(req.url));
   e = new Event(req,res,path,h[emitter],h[maximum]);
+  e.next();
 }
 
 /*/ exports /*/
