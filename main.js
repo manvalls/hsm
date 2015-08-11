@@ -22,7 +22,7 @@ function Hsm(server,host){
 
   Emitter.Target.call(this,emitter);
 
-  this[maximum] = 0;
+  this[maximum] = null;
 
   this[from] = [];
   this[to] = [];
@@ -50,7 +50,7 @@ Hsm.prototype[define]({
       (event + '').split('/').length
     );
 
-    this[maximum] = max;
+    this[maximum] = --max;
   },
 
   compute: function(path){

@@ -62,11 +62,12 @@ Event.prototype[define]({
     return this[cookies];
   },
 
+  sendCookies: require('./Event/sendCookies.js'),
   sendFile: require('./Event/sendFile.js'),
   accept: require('./Event/accept.js'),
   charset: require('./Event/charset.js'),
   encoding: require('./Event/encoding.js'),
-  language: require('./Event/language.js'),
+  language: require('./Event/language.js')
 
 });
 
