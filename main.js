@@ -31,6 +31,9 @@ function Hsm(server,host){
   server[hsm][host] = this;
   server.on('request',onRequest);
 
+  this.on(this.eventListened,onEvChange);
+  this.on(this.eventIgnored,onEvChange);
+
 }
 
 Hsm.prototype = Object.create(Emitter.Target.prototype);
@@ -41,17 +44,6 @@ Hsm.prototype[define](Hsm.isHsm,true);
 Hsm.prototype[define]({
 
   constructor: Hsm,
-
-  digest: function(){
-    var max = 0,
-        event;
-
-    for(event of this.events()) max = Math.max(max,
-      (event + '').split('/').length
-    );
-
-    this[maximum] = --max;
-  },
 
   compute: function(path){
     var computed = path,
@@ -98,7 +90,7 @@ Hsm.prototype[define]({
 
 });
 
-// Request listener
+// - utils
 
 function onRequest(req,res){
   var h,path,e;
@@ -109,6 +101,17 @@ function onRequest(req,res){
   path = h.compute(decodeURI(req.url));
   e = new Event(req,res,path,h[emitter],h[maximum]);
   e.next();
+}
+
+function onEvChange(){
+  var max = 1,
+      event;
+
+  for(event of this.events()) max = Math.max(max,
+    event.split('/').length
+  );
+
+  this[maximum] = max - 1;
 }
 
 /*/ exports /*/
