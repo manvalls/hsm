@@ -15,7 +15,7 @@ sendFile = walk.wrap(function*(file,opt){
   code = opt.code || 200;
 
   if(opt.staticGzip !== false){
-    temp = yield getFinalFileAndStats(file,this.request);
+    temp = yield getFinalFileAndStats(file,this);
     file = temp[0];
     stats = temp[1];
   }else{
@@ -53,29 +53,40 @@ sendFile = walk.wrap(function*(file,opt){
   this.response.writeHead(code,headers);
   if(this.request.method == 'HEAD') return this.response.end();
 
-  fs.createReadStream(file,{start: start, end: end}).pipe(this.response);
+  yield fs.createReadStream(file,{start: start, end: end}).pipe(this.response);
 });
 
 // utils
 
-getFinalFileAndStats = walk.wrap(function*(file,req){
-  var enc = req.headers['accept-encoding'],
-      cb,stats,gzFile;
+getFinalFileAndStats = walk.wrap(function*(file,e){
+  var cb,stats,gzFile,e;
 
-  if(enc && enc.indexOf('gzip') != -1) try{
+  if(e.encoding('gzip').q) try{
 
-    gzFile = file + 'gz';
+    gzFile = file + '.gz';
 
     fs.stat(gzFile,cb = Cb());
 
     stats = yield cb;
     file = gzFile;
 
+    if(stats.isDirectory()){
+      e = new Error();
+      e.code = 'EISDIR';
+      throw e;
+    }
+
   }catch(e){}
 
   if(!stats){
     fs.stat(file,cb = Cb());
     stats = yield cb;
+  }
+
+  if(stats.isDirectory()){
+    e = new Error();
+    e.code = 'EISDIR';
+    throw e;
   }
 
   return [file, stats];

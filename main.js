@@ -1,5 +1,6 @@
 var Emitter = require('y-emitter'),
     define = require('u-proto/define'),
+    updateMax = require('path-event/updateMax'),
 
     Event = require('./Event.js'),
 
@@ -31,9 +32,7 @@ function Hsm(server,host){
   server[hsm][host] = this;
   server.on('request',onRequest);
 
-  this.on(this.eventListened,onEvChange);
-  this.on(this.eventIgnored,onEvChange);
-
+  updateMax(this,maximum);
 }
 
 Hsm.prototype = Object.create(Emitter.Target.prototype);
@@ -101,17 +100,6 @@ function onRequest(req,res){
   path = h.compute(decodeURI(req.url));
   e = new Event(req,res,path,h[emitter],h[maximum]);
   e.next();
-}
-
-function onEvChange(){
-  var max = 1,
-      event;
-
-  for(event of this.events()) max = Math.max(max,
-    event.split('/').length
-  );
-
-  this[maximum] = max - 1;
 }
 
 /*/ exports /*/

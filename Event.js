@@ -14,6 +14,9 @@ var PathEvent = require('path-event'),
     pathname = Symbol(),
     path = Symbol(),
     href = Symbol(),
+    lastTime = Symbol(),
+
+    origin = Symbol(),
 
     cookies = Symbol();
 
@@ -48,12 +51,26 @@ Event.prototype[define]({
   get path(){ return this[path]; },
   get href(){ return this[href]; },
 
+  get origin(){
+    if(this[origin]) return this[origin];
+
+    if(this.request.headers.origin instanceof Array) this[origin] =
+      this.request.headers.origin[this.request.headers.origin.length - 1];
+    else this[origin] = this.request.headers.origin;
+
+    return this[origin];
+  },
+
+  get lastTime(){ this[lastTime] = this[lastTime] || new Date(this.request.headers['if-modified-since'] || -1e15); },
+
   get cookies(){
     var c;
 
     if(this[cookies]) return this[cookies];
 
     c = this[request].headers.cookie || '';
+    if(c instanceof Array) c = c[c.length - 1];
+
     c = c.trim();
     c = c.replace(/"((?:[^"]|(?:\\.))*)"/g,encode);
     c = c.replace(/; /g,';');
@@ -62,8 +79,13 @@ Event.prototype[define]({
     return this[cookies];
   },
 
+  redirect: require('./Event/redirect.js'),
+  notModified: require('./Event/notModified.js'),
+
   sendCookies: require('./Event/sendCookies.js'),
   sendFile: require('./Event/sendFile.js'),
+  checkOrigin: require('./Event/checkOrigin.js'),
+
   accept: require('./Event/accept.js'),
   charset: require('./Event/charset.js'),
   encoding: require('./Event/encoding.js'),
