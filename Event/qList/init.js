@@ -48,8 +48,6 @@ module.exports = function init(hsm,map,prop,def,wc,abd){
     if(params.q == null) params.q = 1;
     else params.q = parseFloat(params.q);
 
-    Object.freeze(params);
-
     if(type == abd) abd = null;
     if(type == wc) wc = null;
 
@@ -61,6 +59,6 @@ module.exports = function init(hsm,map,prop,def,wc,abd){
   if(wc) list.push([wc,{q: 0}]);
 
   list.sort(sort);
-  for(i = 0;i < list.length;i++) hsm[map].set(list[i][0],list[i][1]);
+  for(i = 0;i < list.length;i++) hsm[map].set(list[i][0],list[i][1].q);
 
 }

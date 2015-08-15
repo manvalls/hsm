@@ -84,6 +84,7 @@ Event.prototype[define]({
 
   sendCookies: require('./Event/sendCookies.js'),
   sendFile: require('./Event/sendFile.js'),
+  send: require('./Event/send.js'),
   checkOrigin: require('./Event/checkOrigin.js'),
 
   accept: require('./Event/accept.js'),

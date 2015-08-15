@@ -61,7 +61,7 @@ sendFile = walk.wrap(function*(file,opt){
 getFinalFileAndStats = walk.wrap(function*(file,e){
   var cb,stats,gzFile,e;
 
-  if(e.encoding('gzip').q) try{
+  if(e.encoding('gzip')) try{
 
     gzFile = file + '.gz';
 
