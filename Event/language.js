@@ -2,7 +2,7 @@ var init = require('./qList/init.js'),
     computeName = require('./qList/computeName.js'),
     map = Symbol();
 
-function encoding(type,params){
+function language(type,params){
   var name;
 
   if(!this[map]) init(this,map,'accept-language','*','*');
@@ -19,4 +19,4 @@ function encoding(type,params){
 
 /*/ exports /*/
 
-module.exports = encoding;
+module.exports = language;

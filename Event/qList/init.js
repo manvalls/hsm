@@ -1,7 +1,8 @@
-var computeName = require('./computeName.js');
+var computeName = require('./computeName.js'),
+    pct = require('pct');
 
 function encode(m,s1){
-  return encodeURIComponent(s1);
+  return pct.encodeComponent(s1);
 }
 
 function sort(a,b){
@@ -39,8 +40,8 @@ module.exports = function init(hsm,map,prop,def,wc,abd){
     for(j = 1;j < parts.length;j++){
       pair = parts[j].split('=');
 
-      pair[0] = decodeURIComponent(pair[0].trim());
-      pair[1] = decodeURIComponent((pair[1] || '').trim());
+      pair[0] = pct.decodeComponent(pair[0].trim());
+      pair[1] = pct.decodeComponent((pair[1] || '').trim());
 
       params[pair[0]] = pair[1];
     }

@@ -1,5 +1,6 @@
+var pct = require('pct');
 
-function sendCookies(obj,props){
+function setCookie(obj,props){
   var attrs = '',
       pairs = [],
       prevPairs,keys,i,j,m;
@@ -18,7 +19,7 @@ function sendCookies(obj,props){
 
   for(j = 0;j < keys.length;j++){
     i = keys[j];
-    pairs.push(encodeURIComponent(i) + '=' + encodeURIComponent(obj[i]) + attrs);
+    pairs.push(pct.encodeComponent(i) + '=' + pct.encodeComponent(obj[i]) + attrs);
   }
 
   prevPairs = this.response.getHeader('set-cookie') || [];
@@ -35,4 +36,4 @@ function sendCookies(obj,props){
 
 /*/ exports /*/
 
-module.exports = sendCookies;
+module.exports = setCookie;

@@ -1,8 +1,11 @@
 var Emitter = require('y-emitter'),
     define = require('u-proto/define'),
     updateMax = require('path-event/updateMax'),
+    pct = require('pct'),
 
     Event = require('./Event.js'),
+
+    path = require('path'),
 
     from = Symbol(),
     to = Symbol(),
@@ -11,7 +14,9 @@ var Emitter = require('y-emitter'),
 
     maximum = Symbol(),
 
-    hsm = 'cC8SHA-a63Gt';
+    hsm = 'cC8SHA-a63Gt',
+
+    rest;
 
 // Hsm object
 
@@ -97,9 +102,20 @@ function onRequest(req,res){
   h = this[hsm][req.headers.host] || this[hsm][''];
   if(!h) return;
 
-  path = h.compute(decodeURI(req.url));
+  path = h.compute(decode(req.url));
   e = new Event(req,res,path,h[emitter],h[maximum]);
   e.next();
+}
+
+function decodeReplace(m){
+  rest = m;
+  return '';
+}
+
+function decode(u){
+  url = u.replace(/[\?#].*$/,decodeReplace);
+  try{ return pct.decode(path.normalize(url) + rest); }
+  finally{ rest = null; }
 }
 
 /*/ exports /*/

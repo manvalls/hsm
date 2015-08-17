@@ -1,5 +1,6 @@
 var PathEvent = require('path-event'),
     define = require('u-proto/define'),
+    pct = require('pct'),
 
     url = require('url'),
     QS = require('querystring'),
@@ -82,7 +83,7 @@ Event.prototype[define]({
   redirect: require('./Event/redirect.js'),
   notModified: require('./Event/notModified.js'),
 
-  sendCookies: require('./Event/sendCookies.js'),
+  setCookie: require('./Event/setCookie.js'),
   sendFile: require('./Event/sendFile.js'),
   send: require('./Event/send.js'),
   checkOrigin: require('./Event/checkOrigin.js'),
@@ -95,7 +96,7 @@ Event.prototype[define]({
 });
 
 function encode(m,s1){
-  return encodeURIComponent(s1);
+  return pct.encodeComponent(s1);
 }
 
 /*/ exports /*/
