@@ -114,7 +114,7 @@ function decodeReplace(m){
 
 function decode(u){
   url = u.replace(/[\?#].*$/,decodeReplace);
-  try{ return pct.decode(path.normalize(url) + rest); }
+  try{ return pct.decode(path.normalize(url) + (rest || '')); }
   finally{ rest = null; }
 }
 

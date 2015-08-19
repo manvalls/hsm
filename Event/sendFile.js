@@ -52,8 +52,7 @@ sendFile = walk.wrap(function*(file,opt){
 
   this.response.writeHead(code,headers);
   if(this.request.method == 'HEAD') return this.response.end();
-
-  yield fs.createReadStream(file,{start: start, end: end}).pipe(this.response);
+  yield fs.createReadStream(file,{start: range[0], end: range[1]}).pipe(this.response);
 });
 
 // utils

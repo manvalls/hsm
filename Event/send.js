@@ -7,7 +7,6 @@ function send(str,opt){
   opt = opt || {};
   opt.code = opt.code || 200;
 
-  res.setHeader('Content-Encoding','gzip');
   res.setHeader('Accept-Ranges','none');
   res.setHeader('Last-Modified',(opt.lastModified || new Date()).toGMTString());
 
