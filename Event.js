@@ -2,19 +2,16 @@ var PathEvent = require('path-event'),
     define = require('u-proto/define'),
     pct = require('pct'),
 
-    url = require('url'),
     QS = require('querystring'),
 
     request = Symbol(),
     response = Symbol(),
 
-    hash = Symbol(),
-    search = Symbol(),
+    fragment = Symbol(),
     query = Symbol(),
-    textQuery = Symbol(),
-    pathname = Symbol(),
+    rawQuery = Symbol(),
     path = Symbol(),
-    href = Symbol(),
+    url = Symbol(),
     lastTime = Symbol(),
 
     origin = Symbol(),
@@ -22,19 +19,17 @@ var PathEvent = require('path-event'),
     cookies = Symbol();
 
 function Event(req,res,p,emitter){
-  var u = url.parse(p);
+  var m = p.match(/([^\?#]*)(?:\?([^#]*))?(?:#(.*))?/);
 
   this[request] = req;
   this[response] = res;
 
-  this[hash] = u.hash;
-  this[search] = u.search;
-  this[textQuery] = u.query;
-  this[pathname] = u.pathname;
-  this[path] = u.path;
-  this[href] = u.href;
+  this[fragment] = m[3];
+  this[rawQuery] = m[2];
+  this[path] = m[1];
+  this[url] = p;
 
-  PathEvent.call(this,u.pathname,emitter);
+  PathEvent.call(this,m[1],emitter);
 }
 
 Event.prototype = Object.create(PathEvent.prototype);
@@ -45,15 +40,14 @@ Event.prototype[define]({
   get request(){ return this[request]; },
   get response(){ return this[response]; },
 
-  get hash(){ return this[hash]; },
-  get search(){ return this[search]; },
-  get query(){ return this[query] = this[query] || Object.freeze(QS.parse(this[textQuery])); },
-  get pathname(){ return this[pathname]; },
+  get fragment(){ return this[fragment]; },
+  get rawQuery(){ return this[rawQuery]; },
+  get query(){ return this[query] = this[query] || Object.freeze(QS.parse(this[rawQuery])); },
   get path(){ return this[path]; },
-  get href(){ return this[href]; },
+  get url(){ return this[url]; },
 
   get origin(){
-    if(this[origin]) return this[origin];
+    if(this.hasOwnProperty(origin)) return this[origin];
 
     if(this.request.headers.origin instanceof Array) this[origin] =
       this.request.headers.origin[this.request.headers.origin.length - 1];
@@ -67,7 +61,7 @@ Event.prototype[define]({
   get cookies(){
     var c;
 
-    if(this[cookies]) return this[cookies];
+    if(this.hasOwnProperty(cookies)) return this[cookies];
 
     c = this[request].headers.cookie || '';
     if(c instanceof Array) c = c[c.length - 1];

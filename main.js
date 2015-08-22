@@ -3,9 +3,7 @@ var Emitter = require('y-emitter'),
     updateMax = require('path-event/updateMax'),
     pct = require('pct'),
 
-    Event = require('./Event.js'),
-
-    path = require('path'),
+    Event = global.process ? require('./Eve' + 'nt.js') : null,
 
     from = Symbol(),
     to = Symbol(),
@@ -14,7 +12,7 @@ var Emitter = require('y-emitter'),
 
     maximum = Symbol(),
 
-    hsm = 'cC8SHA-a63Gt',
+    hsm = 'gAvXhw-VXzYq',
 
     rest;
 
@@ -22,38 +20,35 @@ var Emitter = require('y-emitter'),
 
 function Hsm(server,host){
 
-  host = host || '';
-  server[hsm] = server[hsm] || {};
-  if(server[hsm][host]) return server[hsm][host];
-
-  Emitter.Target.call(this,emitter);
-
-  this[maximum] = null;
-
   this[from] = [];
   this[to] = [];
   this[map] = {};
 
+  if(!arguments.length) return;
+
+  host = host || '';
+  server[hsm] = server[hsm] || {};
+  if(server[hsm][host]) return server[hsm][host];
+
   server[hsm][host] = this;
+  Emitter.Target.call(this,emitter);
   server.on('request',onRequest);
 
+  this[maximum] = null;
   updateMax(this,maximum);
+  
 }
 
 Hsm.prototype = Object.create(Emitter.Target.prototype);
-
-Hsm.isHsm = 'cWxHkA-NbDtE';
-Hsm.prototype[define](Hsm.isHsm,true);
-
 Hsm.prototype[define]({
 
   constructor: Hsm,
 
   compute: function(path){
-    var computed = path,
+    var computed = decode(path,this.maxSlashes),
         i;
 
-    if(path in this[map]) computed = this[map][computed];
+    if(this[map].hasOwnProperty(computed)) computed = this[map][computed];
     else for(i = 0;i < this[from].length;i++)
       computed = computed.replace(this[from][i],this[to][i]);
 
@@ -102,20 +97,31 @@ function onRequest(req,res){
   h = this[hsm][req.headers.host] || this[hsm][''];
   if(!h) return;
 
-  path = h.compute(decode(req.url));
+  path = h.compute(req.url);
   e = new Event(req,res,path,h[emitter],h[maximum]);
   e.next();
 }
 
-function decodeReplace(m){
-  rest = m;
-  return '';
-}
+function decode(url,max){
+  var m = ((url || '') + '').match(/^(.*?)([#\?].*)?$/),
+      path = m[1] || '',
+      rest = m[2] || '',
+      segments = path.split('/',max || 1000),
+      result = [],
+      segment;
 
-function decode(u){
-  url = u.replace(/[\?#].*$/,decodeReplace);
-  try{ return pct.decode(path.normalize(url) + (rest || '')); }
-  finally{ rest = null; }
+  while((segment = segments.shift()) != null) switch(segment){
+    case '..':
+      if(result.length > 1) result.pop();
+    case '.':
+      if(!segments.length) result.push('');
+      break;
+    default:
+      result.push(segment);
+      break;
+  }
+
+  return pct.decode(result.join('/') + rest);
 }
 
 /*/ exports /*/
