@@ -5,12 +5,12 @@ var init = require('./qList/init.js'),
 function encoding(type){
   var name;
 
-  if(!this[map]) init(this,map,'accept-encoding','identity,*;q=0.1','*','identity');
+  if(!this[map]) init(false,this,map,'accept-encoding','identity,*;q=0.1','*','identity');
   if(type == null) return this[map].entries();
 
   type = type || '';
 
-  name = computeName(type,{});
+  name = type;
   if(this[map].has(name)) return this[map].get(name);
 
   return this[map].get('*');

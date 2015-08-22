@@ -9,7 +9,7 @@ function getBaseType(name){
 function accept(type,params){
   var baseType,name;
 
-  if(!this[map]) init(this,map,'accept','*/*','*/*');
+  if(!this[map]) init(true,this,map,'accept','*/*','*/*');
   if(type == null) return this[map].entries();
 
   type = type || '';

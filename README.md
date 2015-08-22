@@ -150,7 +150,7 @@ Handle CORS headers exchange. Returns a `Promise/A+` that will be fulfilled when
 - timeout ( *Number* )
 - allowCredentials ( *Boolean* )
 
-### event.accept( type )
+### event.accept( type [, params] )
 
 When called with arguments, returns the correspondant `q` value of supplied MIME type. When called without arguments, returns an iterator which will yield arrays in the form:
 

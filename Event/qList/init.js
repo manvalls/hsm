@@ -20,25 +20,25 @@ function sort(a,b){
   return lb - la;
 }
 
-module.exports = function init(hsm,map,prop,def,wc,abd){
+module.exports = function init(cn,hsm,map,prop,def,wc,abd){
   var accept,types,parts,list,
       type,pair,params,name,
       i,j;
 
   accept = ((hsm.request.headers[prop] || '').trim() || def).toLowerCase();
-  accept = accept.replace(/\0/g,'').replace(/"((?:[^"]|(?:\\.))*)"/g,encode);
+  accept = accept.replace(/"((?:[^"]|(?:\\.))*)"/g,encode);
 
   hsm[map] = new Map();
-  types = accept.split(',');
+  types = accept.split(',',1000);
 
   list = [];
   for(i = 0;i < types.length;i++){
-    parts = types[i].split(';');
+    parts = types[i].split(';',100);
     type = parts[0].trim();
     params = {};
 
     for(j = 1;j < parts.length;j++){
-      pair = parts[j].split('=');
+      pair = parts[j].split('=',2);
 
       pair[0] = pct.decodeComponent(pair[0].trim());
       pair[1] = pct.decodeComponent((pair[1] || '').trim());
@@ -52,7 +52,9 @@ module.exports = function init(hsm,map,prop,def,wc,abd){
     if(type == abd) abd = null;
     if(type == wc) wc = null;
 
-    name = computeName(type,params);
+    if(cn) name = computeName(type,params);
+    else name = type;
+
     list.push([name,params]);
   }
 
