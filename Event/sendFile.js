@@ -8,7 +8,7 @@ var walk = require('y-walk'),
 
 sendFile = walk.wrap(function*(file,opt){
   var temp,stats,headers,cb,range,code,
-      size;
+      size,etag;
 
   opt = opt || {};
   headers = opt.headers || {};
@@ -26,14 +26,17 @@ sendFile = walk.wrap(function*(file,opt){
   if(opt.applyMimeHeaders !== false)
     populateMimeHeaders(file,headers,opt.mimeHeaders);
 
-  if(dateCheckFailed(this.request,this.response,stats)) return;
+  headers.ETag = etag =  headers.ETag || headers.etag ||
+          '"' + stats.ino + '-' + stats.dev + '-' + stats.mtime.getTime().toString(36) + '"';
+
+  if(cacheCheckFailed(this.request,this.response,stats,etag)) return;
 
   if(code == 200){
 
     headers['Accept-Ranges'] = 'bytes';
     headers['Last-Modified'] = stats.mtime.toUTCString();
 
-    range = getRange(this.request,stats);
+    range = getRange(this.request,stats,etag);
     if(!validRange(range,stats)){
       this.response.writeHead(416);
       this.response.end();
@@ -111,24 +114,48 @@ function populateMimeHeaders(file,headers,customMime){
 
 }
 
-function dateCheckFailed(req,res,stats){
-  var date;
+function cacheCheckFailed(req,res,stats,etag){
+  var date,inm,im;
 
-  if(req.headers['if-modified-since']){
-    date = new Date(req.headers['if-modified-since']);
+  if(req.headers['if-unmodified-since']){
+    date = new Date(req.headers['if-unmodified-since']);
 
-    if(date >= stats.mtime){
-      res.writeHead(304);
+    if(stats.mtime - date > 1000){
+      res.writeHead(412);
       res.end();
       return true;
     }
   }
 
-  if(req.headers['if-unmodified-since']){
-    date = new Date(req.headers['if-unmodified-since']);
+  if(req.headers['if-match'] && req.headers['if-match'] != '*'){
+    im = req.headers['if-match'];
+    if(im instanceof Array) im = im.join(',');
+    im = im.match(/(W\/)?"([^"]|\\.)*"/gi);
 
-    if(date < stats.mtime){
+    if(im.indexOf(etag) == -1){
       res.writeHead(412);
+      res.end();
+      return true;
+    }
+  }
+
+  if( (req.method == 'GET' || req.method == 'HEAD') && req.headers['if-none-match'] ){
+
+    inm = req.headers['if-none-match'];
+    if(inm instanceof Array) inm = inm.join(',');
+    inm = inm.match(/(W\/)?"([^"]|\\.)*"/gi);
+
+    if(inm.indexOf(etag) != -1){
+      res.writeHead(304);
+      res.end();
+      return true;
+    }
+
+  }else if(req.headers['if-modified-since']){
+    date = new Date(req.headers['if-modified-since']);
+
+    if(!(stats.mtime - date > 1000)){
+      res.writeHead(304);
       res.end();
       return true;
     }
@@ -137,7 +164,7 @@ function dateCheckFailed(req,res,stats){
   return false;
 }
 
-function getRange(req,stats){
+function getRange(req,stats,etag){
   var start,end,date,splittedRange,range;
 
   start = 0;
@@ -145,9 +172,9 @@ function getRange(req,stats){
 
   if(!req.headers.range) return [start,end];
 
-  if(req.headers['if-range']){
+  if(req.headers['if-range'] && req.headers['if-range'] != etag){
     date = new Date(req.headers['if-range']);
-    if(date < stats.mtime) return [start,end];
+    if(!(stats.mtime - date <= 1000)) return [start,end];
   }
 
   splittedRange = req.headers.range.split('=');

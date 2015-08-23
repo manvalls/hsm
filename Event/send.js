@@ -2,13 +2,16 @@ var zlib = require('zlib');
 
 function send(str,opt){
   var res = this.response,
-      gz;
+      gz,d;
 
   opt = opt || {};
   opt.code = opt.code || 200;
 
+  d = opt.lastModified || new Date();
+
   res.setHeader('Accept-Ranges','none');
-  res.setHeader('Last-Modified',(opt.lastModified || new Date()).toGMTString());
+  res.setHeader('Last-Modified',d.toGMTString());
+  res.setHeader('ETag','"hd-' + d.getTime().toString(36) + '"');
 
   if(opt.gzipLevel && this.encoding('gzip')){
 

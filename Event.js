@@ -56,7 +56,22 @@ Event.prototype[define]({
     return this[origin];
   },
 
-  get lastTime(){ this[lastTime] = this[lastTime] || new Date(this.request.headers['if-modified-since'] || -1e15); },
+  get lastTime(){
+    var im,m;
+
+    if(this[lastTime]) return this[lastTime];
+    if(this.request.headers['if-modified-since'])
+      return this[lastTime] = new Date(this.request.headers['if-modified-since']);
+
+    im = this.request.headers['if-match'];
+    if(im){
+      if(im instanceof Array) im = im.join(',');
+      m = im.match(/"hd\-(\-?[0-9a-z]*)"/);
+      if(m) return this[lastTime] = new Date(parseInt(m[1],36));
+    }
+
+    return this[lastTime] = new Date(-1e15);
+  },
 
   get cookies(){
     var c;
