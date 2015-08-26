@@ -18,8 +18,8 @@ var PathEvent = require('path-event'),
 
     cookies = Symbol();
 
-function Event(req,res,p,emitter){
-  var m = p.match(/([^\?#]*)(?:\?([^#]*))?(?:#(.*))?/);
+function Event(req,res,url,emitter){
+  var m = url.match(/([^\?#]*)(?:\?([^#]*))?(?:#(.*))?/);
 
   this[request] = req;
   this[response] = res;
@@ -27,7 +27,7 @@ function Event(req,res,p,emitter){
   this[fragment] = m[3];
   this[rawQuery] = m[2];
   this[path] = m[1];
-  this[url] = p;
+  this[url] = url;
 
   PathEvent.call(this,m[1],emitter);
 }

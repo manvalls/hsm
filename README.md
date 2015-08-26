@@ -1,6 +1,6 @@
 # http(s).Server Mapper
 
-`Hsm` is a class that maps HTTP requests to [path events](https://www.npmjs.com/package/path-event). It extends the `PathEvent` class with several properties and methods.
+`Hsm` is a subclass of [UrlRewriter](https://www.npmjs.com/package/path-event) that maps HTTP requests to [path events](https://www.npmjs.com/package/path-event). It extends the `PathEvent` class with several properties and methods.
 
 ## Sample usage:
 
@@ -13,20 +13,6 @@ hsm.on('/foo',function([e]){
   e.response.end('bar');
 });
 ```
-
-## Hsm class
-
-### hsm.rewrite( from, to )
-
-Transforms internally one URL into another. If *from* is a `String`, the whole URL is treated as *to*. If it's a `RegExp`, `URL.replace(from, to)` is used instead. Note that while events operate at the path level, rewrites work with decoded URLs.
-
-### hsm.unrewrite( from )
-
-Undo a previous rewrite call.
-
-### hsm.compute( URL )
-
-Get the derived internal URL taking into account previously set rewrite rules.
 
 ## PathEvent extenssions
 

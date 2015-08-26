@@ -9,7 +9,8 @@
     "u-proto": "",
     "y-walk": "",
     "y-callback": "",
-    "pct": ""
+    "pct": "",
+    "url-rewriter": ""
   },
   "devDependencies": {},
   "repository": {

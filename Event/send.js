@@ -2,6 +2,7 @@ var zlib = require('zlib');
 
 function send(str,opt){
   var res = this.response,
+      req = this.request,
       gz,d;
 
   opt = opt || {};
@@ -26,6 +27,7 @@ function send(str,opt){
   if(opt.headers) res.writeHead(opt.code,opt.headers);
   else res.writeHead(opt.code);
 
+  if(req.method == 'HEAD') return res.end();
   if(gz) gz.pipe(res);
   else res.end(str);
 
