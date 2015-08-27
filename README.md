@@ -14,6 +14,22 @@ hsm.on('/foo',function([e]){
 });
 ```
 
+## UrlRewriter extenssions
+
+`Hsm` extends the `UrlRewriter` class with several methods:
+
+- `hsm.options()`
+- `hsm.get()`
+- `hsm.head()`
+- `hsm.gh()`
+- `hsm.post()`
+- `hsm.put()`
+- `hsm.delete()`
+- `hsm.trace()`
+- `hsm.connect()`
+
+These are `target.on()` aliases which only call callbacks when the request method match that of their name. The special one `hsm.gh()` will admit either `GET` or `HEAD`.
+
 ## PathEvent extenssions
 
 ### event.request
