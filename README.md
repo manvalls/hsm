@@ -1,6 +1,6 @@
 # http(s).Server Mapper
 
-`Hsm` is a subclass of [UrlRewriter](https://www.npmjs.com/package/path-event) that maps HTTP requests to [path events](https://www.npmjs.com/package/path-event). It extends the `PathEvent` class with several properties and methods.
+`Hsm` is a subclass of [UrlRewriter](https://www.npmjs.com/package/url-rewriter) that maps HTTP requests to [path events](https://www.npmjs.com/package/path-event). It extends the `PathEvent` class with several properties and methods.
 
 ## Sample usage:
 
@@ -13,6 +13,8 @@ hsm.on('/foo',function([e]){
   e.response.end('bar');
 });
 ```
+
+Note that the `Hsm` constructor accepts a second parameter: the `host`, useful in environments where you need multiple web servers on the same port on the same machine.
 
 ## UrlRewriter extenssions
 
