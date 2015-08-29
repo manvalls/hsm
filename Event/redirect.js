@@ -1,12 +1,23 @@
-var pct = require('pct');
 
-function redirect(location,permanent){
+function redirect(location,query,fragment,permanent){
+  var res = this.response;
 
-  this.response.writeHead(permanent ? 308 : 307,{
-    Location: pct.encode(location)
+  if(typeof query != 'object'){
+    permanent = fragment;
+    fragment = query;
+    query = null;
+  }
+
+  if(typeof fragment != 'string'){
+    permanent = fragment;
+    fragment = null;
+  }
+
+  res.writeHead(permanent ? 308 : 307,{
+    Location: encodeURI(this.format(location,query,fragment))
   });
 
-  this.response.end();
+  res.end();
 
 }
 

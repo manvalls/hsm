@@ -62,9 +62,9 @@ The query part of computed URL.
 
 The fragment part of computed URL.
 
-### event.redirect( url [, permanent] )
+### event.redirect( url  [, query] [, fragment] [, permanent] )
 
-Redirect the request to another URL. If `permanent` is true, a `308` response will be sent, if not, the status will be `307`.
+Redirect the request to the URL determined by encoding the result of `urlRewriter.format(url, query, fragment)`. If `permanent` is true, a `308` response will be sent, if not, the status will be `307`.
 
 ### event.lastTime
 
