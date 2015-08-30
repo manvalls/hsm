@@ -9,9 +9,7 @@ var Emitter = require('y-emitter'),
     emitter = Symbol(),
     maximum = Symbol(),
 
-    hsm = 'gAvXhw-VXzYq',
-
-    rest;
+    hsm = 'gAvXhw-VXzYq';
 
 // Hsm object
 
@@ -101,13 +99,12 @@ function ghHandler(a,d,args,cb){
 }
 
 function onRequest(req,res){
-  var h,url,e;
+  var h,e;
 
   h = this[hsm][req.headers.host] || this[hsm][''];
   if(!h) return;
 
-  url = h.compute(req.url);
-  e = new Event(req,res,url,h[emitter],h[maximum]);
+  e = new Event(req,res,h,h[emitter],h[maximum]);
   e.next();
 }
 

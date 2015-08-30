@@ -34,6 +34,23 @@ These are `target.on()` aliases which only call callbacks when the request metho
 
 ## PathEvent extenssions
 
+Although these events will be used as the second argument on internal `urw.compute()` calls, some methods and properties are not available or will fail until the URL is fully computed, namely the following:
+
+- `event.response`
+- `event.url`
+- `event.path`
+- `event.query`
+- `event.rawQuery`
+- `event.fragment`
+- `event.redirect()`
+- `event.notModified()`
+- `event.setCookie()`
+- `event.sendFile()`
+- `event.send()`
+- `event.checkOrigin()`
+
+If you don't plan to use the third argument of `urw.rewrite()` you may ignore above information.
+
 ### event.request
 
 The original [http.IncomingMessage](https://nodejs.org/api/http.html#http_http_incomingmessage).

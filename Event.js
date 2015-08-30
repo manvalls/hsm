@@ -2,27 +2,27 @@ var PathEvent = require('path-event'),
     define = require('u-proto/define'),
     pct = require('pct'),
 
-    QS = require('querystring'),
+    query = require('./Event/query.js'),
+    cookies = require('./Event/cookies.js'),
 
     request = Symbol(),
     response = Symbol(),
 
     fragment = Symbol(),
-    query = Symbol(),
     rawQuery = Symbol(),
     path = Symbol(),
     url = Symbol(),
     lastTime = Symbol(),
+    origin = Symbol();
 
-    origin = Symbol(),
-
-    cookies = Symbol();
-
-function Event(req,res,url,emitter){
-  var m = url.match(/([^\?#]*)(?:\?([^#]*))?(?:#(.*))?/);
+function Event(req,res,h,emitter){
+  var url,m;
 
   this[request] = req;
+  url = h.compute(req.url,this);
+
   this[response] = res;
+  m = url.match(/([^\?#]*)(?:\?([^#]*))?(?:#(.*))?/);
 
   this[fragment] = m[3];
   this[rawQuery] = m[2];
@@ -42,7 +42,7 @@ Event.prototype[define]({
 
   get fragment(){ return this[fragment]; },
   get rawQuery(){ return this[rawQuery]; },
-  get query(){ return this[query] = this[query] || Object.freeze(QS.parse(this[rawQuery])); },
+  get query(){ return query(this); },
   get path(){ return this[path]; },
   get url(){ return this[url]; },
 
@@ -73,21 +73,7 @@ Event.prototype[define]({
     return this[lastTime] = new Date(-1e15);
   },
 
-  get cookies(){
-    var c;
-
-    if(this.hasOwnProperty(cookies)) return this[cookies];
-
-    c = this[request].headers.cookie || '';
-    if(c instanceof Array) c = c[c.length - 1];
-
-    c = c.trim();
-    c = c.replace(/"((?:[^"]|(?:\\.))*)"/g,encode);
-    c = c.replace(/; /g,';');
-
-    this[cookies] = Object.freeze(QS.parse(c,';','='));
-    return this[cookies];
-  },
+  get cookies(){ return cookies(this,this[request].headers.cookie || ''); },
 
   redirect: require('./Event/redirect.js'),
   notModified: require('./Event/notModified.js'),
@@ -103,10 +89,6 @@ Event.prototype[define]({
   language: require('./Event/language.js')
 
 });
-
-function encode(m,s1){
-  return pct.encodeComponent(s1);
-}
 
 /*/ exports /*/
 
