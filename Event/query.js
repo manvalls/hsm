@@ -21,7 +21,7 @@ function getQuery(query){
   query = (query || '') + '';
 
   holder = {};
-  query.replace(/\+/g,'%20').replace(/(.+?)(?:=(.*?))?(&|$)/g,queryReplace);
+  query.replace(/\+/g,'%20').replace(/([^&]+?)(?:=(.*?))?(&|$)/g,queryReplace);
   try{ return Object.freeze(holder); }
   finally{ holder = null; }
 }

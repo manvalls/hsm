@@ -29,6 +29,11 @@ function Event(req,res,h,emitter){
   this[path] = m[1];
   this[url] = url;
 
+  if(req.headers.query){
+    if(this[rawQuery]) this[rawQuery] += '&' + req.headers.query;
+    else this[rawQuery] = req.headers.query;
+  }
+
   PathEvent.call(this,m[1],emitter);
 }
 
