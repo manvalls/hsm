@@ -15,8 +15,8 @@ var PathEvent = require('path-event'),
     lastTime = Symbol(),
     origin = Symbol();
 
-function Event(req,res,h,emitter){
-  var url,m;
+function Event(req,res,h,emitter,max){
+  var url,m,prefixes,method;
 
   this[request] = req;
   url = h.compute(req.url,this);
@@ -34,7 +34,11 @@ function Event(req,res,h,emitter){
     else this[rawQuery] = req.headers.query;
   }
 
-  PathEvent.call(this,m[1],emitter);
+  method = req.method.trim().toUpperCase();
+  prefixes = [method + ' '];
+  if(method == 'HEAD') prefixes.push('GET ');
+
+  PathEvent.call(this,m[1],emitter,max,prefixes);
 }
 
 Event.prototype = Object.create(PathEvent.prototype);
@@ -86,6 +90,7 @@ Event.prototype[define]({
   setCookie: require('./Event/setCookie.js'),
   sendFile: require('./Event/sendFile.js'),
   send: require('./Event/send.js'),
+  sendJSON: require('./Event/sendJSON.js'),
   checkOrigin: require('./Event/checkOrigin.js'),
 
   accept: require('./Event/accept.js'),

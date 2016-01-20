@@ -2,9 +2,7 @@
 module.exports = function computeName(name,params){
   var keys,i,j;
 
-  if(!params) return name;
   keys = Object.keys(params).sort();
-
   for(j = 0;j < keys.length;j++){
     i = keys[j];
     if(i == 'q') continue;

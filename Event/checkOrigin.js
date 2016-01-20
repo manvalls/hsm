@@ -2,7 +2,7 @@ var Resolver = require('y-resolver'),
     Yielded = Resolver.Yielded,
 
     simpleMethods = new Set(['GET','HEAD','POST']),
-    simpleHeaders = new Set(['cache-control','content-language','content-type','expires','last-modified','pragma']);
+    simpleHeaders = new Set(['accept', 'accept-language', 'content-language', 'content-type']);
 
 function checkOrigin(handler,opts){
   var origin = this.origin,
@@ -20,6 +20,9 @@ function checkOrigin(handler,opts){
   }
 
   opts = opts || {};
+  if(opts.responseHeaders) opts.responseHeaders = new Set(opts.responseHeaders);
+  if(opts.requestHeaders) opts.requestHeaders = new Set(opts.requestHeaders);
+  if(opts.methods) opts.methods = new Set(opts.methods);
 
   if(this.request.method == 'OPTIONS'){
 
@@ -58,7 +61,7 @@ function checkOrigin(handler,opts){
     if(orh) res.setHeader('Access-Control-Allow-Headers',orh);
     if(opts.timeout) res.setHeader('Access-Control-Max-Age',opts.timeout + '');
     res.end();
-    
+
     return new Yielded();
 
   }

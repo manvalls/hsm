@@ -23,6 +23,12 @@ sendFile = walk.wrap(function*(file,opt){
     stats = yield cb;
   }
 
+  if(stats.isDirectory()){
+    e = new Error('Can not send a directory');
+    e.code = 'EISDIR';
+    throw e;
+  }
+
   if(opt.applyMimeHeaders !== false)
     populateMimeHeaders(file,headers,opt.mimeHeaders);
 
@@ -68,29 +74,21 @@ getFinalFileAndStats = walk.wrap(function*(file,e){
     gzFile = file + '.gz';
 
     fs.stat(gzFile,cb = Cb());
-
     stats = yield cb;
-    file = gzFile;
 
     if(stats.isDirectory()){
-      e = new Error();
-      e.code = 'EISDIR';
-      throw e;
+      stats = null;
+      throw new Error();
     }
 
+    file = gzFile;
   }catch(e){}
 
   if(!stats){
     fs.stat(file,cb = Cb());
     stats = yield cb;
   }
-
-  if(stats.isDirectory()){
-    e = new Error();
-    e.code = 'EISDIR';
-    throw e;
-  }
-
+  
   return [file, stats];
 });
 

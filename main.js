@@ -15,16 +15,16 @@ var Emitter = require('y-emitter'),
 
 function Hsm(server,host){
 
+  if(!server[hsm]){
+    server[hsm] = {};
+    server.on('request',onRequest);
+  }
+
   host = host || '';
-  server[hsm] = server[hsm] || {};
   if(server[hsm][host]) return server[hsm][host];
-
-  UrlRewriter.call(this);
-  Emitter.Target.call(this,emitter);
-
   server[hsm][host] = this;
-  server.on('request',onRequest);
 
+  UrlRewriter.call(this,emitter);
   this[maximum] = null;
   updateMax(this,maximum);
 
@@ -35,68 +35,13 @@ Hsm.prototype[define]({
 
   constructor: Hsm,
 
-  options: function(){
-    return this.on(arguments[0],methodHandler,arguments,arguments[1],'OPTIONS');
-  },
-
-  get: function(){
-    return this.on(arguments[0],methodHandler,arguments,arguments[1],'GET');
-  },
-
-  head: function(){
-    return this.on(arguments[0],methodHandler,arguments,arguments[1],'HEAD');
-  },
-
-  gh: function(){
-    return this.on(arguments[0],ghHandler,arguments,arguments[1]);
-  },
-
-  post: function(){
-    return this.on(arguments[0],methodHandler,arguments,arguments[1],'POST');
-  },
-
-  put: function(){
-    return this.on(arguments[0],methodHandler,arguments,arguments[1],'PUT');
-  },
-
-  delete: function(){
-    return this.on(arguments[0],methodHandler,arguments,arguments[1],'DELETE');
-  },
-
-  trace: function(){
-    return this.on(arguments[0],methodHandler,arguments,arguments[1],'TRACE');
-  },
-
-  connect: function(){
-    return this.on(arguments[0],methodHandler,arguments,arguments[1],'CONNECT');
+  allowOrigin: function(handle,opts){
+    return this.on('*',handleCORS,handle,opts);
   }
 
 });
 
 // - utils
-
-function methodHandler(a,d,args,cb,method){
-  var e = a[0];
-
-  if(e.request.method != method) return e.next();
-
-  args[0] = a;
-  args[1] = d;
-
-  walk(cb,args,this);
-}
-
-function ghHandler(a,d,args,cb){
-  var e = a[0],
-      m = e.request.method;
-
-  if(m != 'GET' && m != 'HEAD') return e.next();
-
-  args[0] = a;
-  args[1] = d;
-
-  walk(cb,args,this);
-}
 
 function onRequest(req,res){
   var h,e;
@@ -105,7 +50,13 @@ function onRequest(req,res){
   if(!h) return;
 
   e = new Event(req,res,h,h[emitter],h[maximum]);
-  e.next();
+  e.give();
+}
+
+function* handleCORS(e,d,handle,opt){
+  yield e.take();
+  yield e.checkOrigin(handle,opt);
+  e.give();
 }
 
 /*/ exports /*/

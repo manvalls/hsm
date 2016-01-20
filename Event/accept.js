@@ -18,6 +18,9 @@ function accept(type,params){
   name = computeName(type,params);
   if(this[map].has(name)) return this[map].get(name);
 
+  name = computeName(type,{});
+  if(this[map].has(name)) return this[map].get(name);
+
   baseType = getBaseType(type);
   if(this[map].has(baseType)) return this[map].get(baseType);
 
