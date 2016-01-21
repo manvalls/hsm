@@ -1,4 +1,4 @@
-# http(s).Server Mapper
+# http(s).Server Mapper [![Build Status][ci-img]][ci-url] [![Coverage Status][cover-img]][cover-url]
 
 `Hsm` is a subclass of [UrlRewriter](https://www.npmjs.com/package/url-rewriter) that maps HTTP requests to [path events](https://www.npmjs.com/package/path-event). It extends the `PathEvent` class with several properties and methods.
 
@@ -15,22 +15,6 @@ hsm.on('/foo',function([e]){
 ```
 
 Note that the `Hsm` constructor accepts a second parameter: the `host`, useful in environments where you need multiple web servers on the same port on the same machine.
-
-## UrlRewriter extenssions
-
-`Hsm` extends the `UrlRewriter` class with several methods:
-
-- `hsm.options()`
-- `hsm.get()`
-- `hsm.head()`
-- `hsm.gh()`
-- `hsm.post()`
-- `hsm.put()`
-- `hsm.delete()`
-- `hsm.trace()`
-- `hsm.connect()`
-
-These are `target.on()` aliases which only call callbacks when the request method match that of their name. The special one `hsm.gh()` will admit either `GET` or `HEAD`.
 
 ## PathEvent extenssions
 
@@ -149,6 +133,10 @@ Send some data as the response to the current request. `data` can be a `Buffer` 
 - gzipLevel ( *Number* ) `= 0`
 - headers ( *Object* ) `= {}`
 
+### event.sendJSON( data [, options] )
+
+Same as `event.send()`, but it will serialize `data` as JSON.
+
 ### event.origin
 
 The `Origin` header of the request, if present.
@@ -202,3 +190,8 @@ When called with arguments, returns the correspondant `q` value of supplied lang
 ```javascript
 [ language, qValue ]
 ```
+
+[ci-img]: https://circleci.com/gh/manvalls/hsm.svg?style=shield
+[ci-url]: https://circleci.com/gh/manvalls/hsm
+[cover-img]: https://coveralls.io/repos/manvalls/hsm/badge.svg?branch=master&service=github
+[cover-url]: https://coveralls.io/github/manvalls/hsm?branch=master

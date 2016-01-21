@@ -32,17 +32,17 @@ sendFile = walk.wrap(function*(file,opt){
   if(opt.applyMimeHeaders !== false)
     populateMimeHeaders(file,headers,opt.mimeHeaders);
 
-  headers.ETag = etag =  headers.ETag || headers.etag ||
-          '"' + stats.ino + '-' + stats.dev + '-' + stats.mtime.getTime().toString(36) + '"';
-
-  if(cacheCheckFailed(this.request,this.response,stats,etag)) return;
-
   if(code == 200){
 
     headers['Accept-Ranges'] = 'bytes';
     headers['Last-Modified'] = stats.mtime.toUTCString();
+    headers.ETag = etag = headers.ETag ||
+                          headers.etag ||
+                          '"' + stats.ino + '-' + stats.dev + '-' + stats.mtime.getTime().toString(36) + '"';
 
+    if(cacheCheckFailed(this.request,this.response,stats,etag)) return;
     range = getRange(this.request,stats,etag);
+
     if(!validRange(range,stats)){
       this.response.writeHead(416);
       this.response.end();
@@ -88,7 +88,7 @@ getFinalFileAndStats = walk.wrap(function*(file,e){
     fs.stat(file,cb = Cb());
     stats = yield cb;
   }
-  
+
   return [file, stats];
 });
 
@@ -125,26 +125,27 @@ function cacheCheckFailed(req,res,stats,etag){
     }
   }
 
-  if(req.headers['if-match'] && req.headers['if-match'] != '*'){
+  if(req.headers['if-match']){
     im = req.headers['if-match'];
     if(im instanceof Array) im = im.join(',');
-    im = im.match(/(W\/)?"([^"]|\\.)*"/gi);
+    im = im.match(/(W\/)?"([^"]|\\.)*"|\*/gi);
 
-    if(im.indexOf(etag) == -1){
+    if(!im || (im.indexOf('*') == -1 && im.indexOf(etag) == -1)){
       res.writeHead(412);
       res.end();
       return true;
     }
   }
 
-  if( (req.method == 'GET' || req.method == 'HEAD') && req.headers['if-none-match'] ){
+  if(req.headers['if-none-match'] ){
 
     inm = req.headers['if-none-match'];
     if(inm instanceof Array) inm = inm.join(',');
-    inm = inm.match(/(W\/)?"([^"]|\\.)*"/gi);
+    inm = inm.match(/(W\/)?"([^"]|\\.)*"|\*/gi);
 
-    if(inm.indexOf(etag) != -1){
-      res.writeHead(304);
+    if(inm && (inm.indexOf(etag) != -1 || inm.indexOf('*') != -1)){
+      if(req.method == 'GET' || req.method == 'HEAD') res.writeHead(304);
+      else res.writeHead(412);
       res.end();
       return true;
     }

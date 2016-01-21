@@ -13,8 +13,16 @@ hsm1.allowOrigin(/./);
 hsm2.allowOrigin(function(origin){
   return origin.indexOf('127.0.0.1') != -1;
 },{
-  requestHeaders: ['superheader','range'],
-  responseHeaders: ['fooheader'],
+  requestHeaders: [
+    'superheader',
+    'range',
+    'if-range',
+    'if-match',
+    'if-unmodified-since',
+    'if-modified-since',
+    'if-none-match'
+  ],
+  responseHeaders: ['fooheader','etag'],
   methods: []
 });
 
@@ -66,7 +74,7 @@ hsm2.on('GET /headers',function*(e){
   e.sendJSON(true);
 });
 
-hsm2.on('GET /file',function*(e){
+hsm2.on('/file',function*(e){
   yield e.take();
 
   if(e.query.staticGzip == 'false'){
@@ -91,7 +99,11 @@ hsm2.on('GET /file',function*(e){
   }
 
   if('range' in e.query){
-    e.sendFile(__dirname + '/range.txt');
+
+    e.sendFile(__dirname + '/range.txt',{
+      'cache-control': 'no-cache'
+    });
+
     return;
   }
 

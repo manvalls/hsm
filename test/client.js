@@ -161,7 +161,7 @@ t('Custom headers',function*(){
 });
 
 t('File',function*(){
-  var res;
+  var res,etag;
 
   res = yield fetch('http://127.0.0.1:8888/file');
   assert.strictEqual(res.headers.get('content-type'),'text/plain');
@@ -190,7 +190,78 @@ t('File',function*(){
 
   assert.strictEqual(res.headers.get('content-type'),'text/plain');
   assert.strictEqual((yield res.text()).trim(),'23');
+  etag = res.headers.get('etag');
 
+  res = yield fetch('http://127.0.0.1:8888/file?range',{
+    headers: new Headers({
+      range: 'bytes=2-',
+      'if-range': etag
+    })
+  });
+
+  assert.strictEqual(res.headers.get('content-type'),'text/plain');
+  assert.strictEqual((yield res.text()).trim(),'23456789');
+
+  res = yield fetch('http://127.0.0.1:8888/file?range',{
+    headers: new Headers({
+      range: 'bytes=-2'
+    })
+  });
+
+  assert.strictEqual(res.headers.get('content-type'),'text/plain');
+  assert.strictEqual((yield res.text()).trim(),'9');
+
+  res = yield fetch('http://127.0.0.1:8888/file?range',{
+    headers: new Headers({
+      range: 'bytes=-2',
+      'if-range': 'foo',
+      'if-modified-since': new Date(0) + ''
+    })
+  });
+
+  assert.strictEqual(res.headers.get('content-type'),'text/plain');
+  assert.strictEqual((yield res.text()).trim(),'0123456789');
+
+  res = yield fetch('http://127.0.0.1:8888/file?range',{
+    headers: new Headers({
+      range: 'bytes=-100'
+    })
+  });
+
+  assert.strictEqual(res.status,416);
+
+  res = yield fetch('http://127.0.0.1:8888/file',{
+    headers: new Headers({
+      'if-match': 'foo'
+    })
+  });
+
+  assert.strictEqual(res.status,412);
+
+  res = yield fetch('http://127.0.0.1:8888/file',{
+    headers: new Headers({
+      'if-unmodified-since': new Date(0) + ''
+    })
+  });
+
+  assert.strictEqual(res.status,412);
+
+  res = yield fetch('http://127.0.0.1:8888/file',{
+    method: 'POST',
+    headers: new Headers({
+      'if-none-match': '*'
+    })
+  });
+
+  assert.strictEqual(res.status,412);
+
+  res = yield fetch('http://127.0.0.1:8888/file?range');
+  assert.strictEqual(res.headers.get('content-type'),'text/plain');
+  assert.strictEqual((yield res.text()).trim(),'0123456789');
+
+  res = yield fetch('http://127.0.0.1:8888/file?range');
+  assert.strictEqual(res.headers.get('content-type'),'text/plain');
+  assert.strictEqual((yield res.text()).trim(),'0123456789');
 });
 
 t.done.then(function(){
