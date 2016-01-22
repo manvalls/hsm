@@ -14,7 +14,7 @@ function redirect(location,query,fragment,permanent){
   }
 
   res.writeHead(permanent ? 308 : 307,{
-    Location: encodeURI(this.format(location,query,fragment))
+    Location: encodeURI(this.hsm.format(location,query,fragment))
   });
 
   res.end();

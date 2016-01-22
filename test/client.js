@@ -163,7 +163,7 @@ t('Custom headers',function*(){
 t('File',function*(){
   var res,etag;
 
-  res = yield fetch('http://127.0.0.1:8888/file');
+  res = yield fetch('http://127.0.0.1:8888/file?redirect');
   assert.strictEqual(res.headers.get('content-type'),'text/plain');
   assert.strictEqual((yield res.text()).trim(),'0123456789');
 
@@ -262,6 +262,30 @@ t('File',function*(){
   res = yield fetch('http://127.0.0.1:8888/file?range');
   assert.strictEqual(res.headers.get('content-type'),'text/plain');
   assert.strictEqual((yield res.text()).trim(),'0123456789');
+});
+
+t('Cookies',function*(){
+  var res;
+
+  yield fetch('http://127.0.0.1:8888/cookie?set',{credentials: 'include'});
+  res = yield fetch('http://127.0.0.1:8888/cookie',{credentials: 'include'});
+  assert.deepEqual(yield res.json(),{
+    foo: 'bar',
+    bar: 'foo',
+    answer: 42
+  });
+
+});
+
+t('Cache',function*(){
+  var res;
+
+  res = yield fetch('http://127.0.0.1:8888/cache');
+  assert.strictEqual(yield res.text(),'foo');
+  res = yield fetch('http://127.0.0.1:8888/cache');
+  assert.strictEqual(yield res.text(),'foo');
+  res = yield fetch('http://127.0.0.1:8888/cache');
+  assert.strictEqual(yield res.text(),'foo');
 });
 
 t.done.then(function(){

@@ -23,7 +23,8 @@ hsm2.allowOrigin(function(origin){
     'if-none-match'
   ],
   responseHeaders: ['fooheader','etag'],
-  methods: []
+  methods: [],
+  allowCredentials: true
 });
 
 hsm1.on('GET /accept',function*(e){
@@ -77,6 +78,11 @@ hsm2.on('GET /headers',function*(e){
 hsm2.on('/file',function*(e){
   yield e.take();
 
+  if('redirect' in e.query){
+    e.redirect('/file');
+    return;
+  }
+
   if(e.query.staticGzip == 'false'){
     e.sendFile(__dirname + '/file.txt',{staticGzip: false});
     return;
@@ -108,6 +114,29 @@ hsm2.on('/file',function*(e){
   }
 
   e.sendFile(__dirname + '/file.txt');
+});
+
+hsm2.on('GET /cookie',function*(e){
+  yield e.take();
+
+  if('set' in e.query){
+    e.setCookie({foo: 'bar',answer: -1});
+    e.setCookie({bar: 'foo',answer: 42});
+    e.send();
+  }else{
+    e.sendJSON(e.cookies);
+  }
+
+});
+
+hsm2.on('GET /cache',function*(e){
+  yield e.take();
+  if(e.lastTime > new Date(0)) return e.notModified();
+  e.send('foo',{
+    headers: {
+      'cache-control': 'no-cache'
+    }
+  });
 });
 
 hsm1.on('POST /endServer',function(){

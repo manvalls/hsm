@@ -5,6 +5,7 @@ function send(str,opt){
       req = this.request,
       gz,d;
 
+  str = str || '';
   opt = opt || {};
   opt.code = opt.code || 200;
 

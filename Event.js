@@ -5,6 +5,7 @@ var PathEvent = require('path-event'),
     query = require('./Event/query.js'),
     cookies = require('./Event/cookies.js'),
 
+    hsm = Symbol(),
     request = Symbol(),
     response = Symbol(),
 
@@ -18,6 +19,7 @@ var PathEvent = require('path-event'),
 function Event(req,res,h,emitter,max){
   var url,m,prefixes,method;
 
+  this[hsm] = emitter.target;
   this[request] = req;
   url = h.compute(req.url,this);
 
@@ -45,6 +47,7 @@ Event.prototype = Object.create(PathEvent.prototype);
 Event.prototype[define]({
 
   constructor: Event,
+  get hsm(){ return this[hsm]; },
 
   get request(){ return this[request]; },
   get response(){ return this[response]; },
