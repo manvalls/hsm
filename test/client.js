@@ -1,7 +1,6 @@
 var t = require('u-test'),
     assert = require('assert'),
     walk = require('y-walk'),
-    wait = require('y-timers/wait'),
     accept,charset,encoding,language;
 
 function json(data){
