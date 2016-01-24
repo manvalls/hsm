@@ -10,7 +10,7 @@ function accept(type,params){
   var baseType,name;
 
   if(!this[map]) init(true,this,map,'accept','*/*','*/*');
-  if(type == null) return this[map].entries();
+  if(type == null) return filter(this[map].entries());
 
   type = type || '';
   params = params || {};
@@ -25,6 +25,11 @@ function accept(type,params){
   if(this[map].has(baseType)) return this[map].get(baseType);
 
   return this[map].get('*/*');
+}
+
+function* filter(it){
+  var entry;
+  for(entry of it) if(entry[1] > 0) yield entry;
 }
 
 /*/ exports /*/

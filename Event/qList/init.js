@@ -22,8 +22,8 @@ function sort(a,b){
 
 module.exports = function init(cn,hsm,map,prop,def,wc,abd){
   var accept,types,parts,list,
-      type,pair,params,name,
-      i,j;
+      type,pair,params,name,keys,
+      key,i,j;
 
   accept = ((hsm.request.headers[prop] || '').trim() || def).toLowerCase();
   accept = accept.replace(/"((?:[^"]|(?:\\.))*)"/g,encode);
@@ -32,6 +32,7 @@ module.exports = function init(cn,hsm,map,prop,def,wc,abd){
   types = accept.split(',',1000);
 
   list = [];
+  if(prop == 'accept-language') keys = new Map();
   for(i = 0;i < types.length;i++){
     parts = types[i].split(';',100);
     type = parts[0].trim();
@@ -55,7 +56,14 @@ module.exports = function init(cn,hsm,map,prop,def,wc,abd){
     if(cn) name = computeName(type,params);
     else name = type;
 
+    if(keys && (!keys.has(name) || keys.get(name) > params.q)) keys.set(name,params.q);
     list.push([name,params]);
+  }
+
+  if(keys) for(key of keys.keys()){
+    name = key.split('-',1)[0];
+    if(keys.has(name)) continue;
+    list.push([name,{q: keys.get(key)}]);
   }
 
   if(abd) list.push([abd,{q: 1}]);

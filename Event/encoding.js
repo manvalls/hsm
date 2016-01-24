@@ -6,7 +6,7 @@ function encoding(type){
   var name;
 
   if(!this[map]) init(false,this,map,'accept-encoding','identity,*;q=0.1','*','identity');
-  if(type == null) return this[map].entries();
+  if(type == null) return filter(this[map].entries());
 
   type = type || '';
 
@@ -14,6 +14,11 @@ function encoding(type){
   if(this[map].has(name)) return this[map].get(name);
 
   return this[map].get('*');
+}
+
+function* filter(it){
+  var entry;
+  for(entry of it) if(entry[1] > 0) yield entry;
 }
 
 /*/ exports /*/

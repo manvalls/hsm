@@ -50,7 +50,7 @@ t('Accept',function*(){
   var data,txt;
 
   data = yield accept('application/json');
-  assert.deepEqual(data,[["application/json",1],["*/*",0]]);
+  assert.deepEqual(data,[["application/json",1]]);
 
   data = yield accept('image/*','image/png');
   assert.strictEqual(data,1);
@@ -69,7 +69,7 @@ t('Accept',function*(){
   assert.strictEqual(data,0.5);
 
   data = yield accept('image/png,image/jpeg');
-  assert.deepEqual(data,[["image/jpeg",1],["image/png",1],["*/*",0]]);
+  assert.deepEqual(data,[["image/jpeg",1],["image/png",1]]);
 });
 
 t('Charset',function*(){
@@ -97,14 +97,14 @@ t('Encoding',function*(){
 t('Language',function*(){
   var data,txt;
 
-  txt = 'da, en-gb;q=0.8, en;q=0.7';
+  txt = 'da, en-gb;q=0.8, es-ar, en;q=0.7';
   data = yield language(txt);
-  assert.deepEqual(data,[["da",1],["en-gb",0.8],["en",0.7],["*",0]]);
+  assert.deepEqual(data,[["es-ar",1],["da",1],["es",1],["en-gb",0.8],["en",0.7]]);
   data = yield language(txt,'en');
   assert.strictEqual(data,0.7);
 
   data = yield language('es-ES');
-  assert.deepEqual(data,[["es-es",1],["*",0],["es",1]]);
+  assert.deepEqual(data,[["es-es",1],["es",1]]);
   data = yield language('es-ES','es');
   assert.strictEqual(data,1);
   data = yield language('es-ES','en');
