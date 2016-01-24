@@ -140,5 +140,7 @@ hsm2.on('GET /cache',function*(e){
 });
 
 hsm1.on('POST /endServer',function(){
+  hsm1.detach();
+  hsm2.detach();
   server.close();
 });

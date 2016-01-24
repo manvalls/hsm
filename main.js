@@ -8,21 +8,25 @@ var Emitter = require('y-emitter'),
 
     emitter = Symbol(),
     maximum = Symbol(),
+    server = Symbol(),
+    host = Symbol(),
 
     hsm = 'gAvXhw-VXzYq';
 
 // Hsm object
 
-function Hsm(server,host){
+function Hsm(srv,hst){
 
-  if(!server[hsm]){
-    server[hsm] = {};
-    server.on('request',onRequest);
+  if(!srv[hsm]){
+    srv[hsm] = {};
+    srv.on('request',onRequest);
   }
 
-  host = host || '';
-  if(server[hsm][host]) return server[hsm][host];
-  server[hsm][host] = this;
+  hst = hst || '';
+  if(srv[hsm][hst]) return srv[hsm][hst];
+  srv[hsm][hst] = this;
+  this[server] = srv;
+  this[host] = hst;
 
   UrlRewriter.call(this,emitter);
   this[maximum] = null;
@@ -34,6 +38,13 @@ Hsm.prototype = Object.create(UrlRewriter.prototype);
 Hsm.prototype[define]({
 
   constructor: Hsm,
+
+  get server(){ return this[server]; },
+  get host(){ return this[host]; },
+
+  detach: function(){
+    delete this.server[hsm][this.host];
+  },
 
   allowOrigin: function(handle,opts){
     return this.on('*',handleCORS,handle,opts);
