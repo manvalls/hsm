@@ -8,13 +8,13 @@
     "pct": "^1.1.0",
     "u-proto": "^5.4.5",
     "u-test": "^3.3.3",
-    "url-rewriter": "^3.0.0",
+    "url-rewriter": "^3.1.0",
     "y-callback": "^1.2.2",
     "y-emitter": "^12.4.0",
     "y-walk": "^10.0.3"
   },
   "devDependencies": {
-    "u-test": "^3.4.0"
+    "u-test": "^3.6.1"
   },
   "repository": {
     "type": "git",
