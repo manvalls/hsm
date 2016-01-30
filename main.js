@@ -47,7 +47,7 @@ Hsm.prototype[define]({
   },
 
   allowOrigin: function(handle,opts){
-    return this.on('*',handleCORS,handle,opts);
+    return this.on('/*',handleCORS,handle,opts);
   }
 
 });
@@ -65,7 +65,7 @@ function onRequest(req,res){
 }
 
 function* handleCORS(e,d,handle,opt){
-  yield e.take();
+  yield e.capture();
   yield e.checkOrigin(handle,opt);
   e.give();
 }

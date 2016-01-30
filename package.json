@@ -4,7 +4,7 @@
   "description": "A utility which maps request events to path ones",
   "main": "main.js",
   "dependencies": {
-    "path-event": "^5.2.1",
+    "path-event": "^6.0.1",
     "pct": "^1.1.0",
     "u-proto": "^5.4.5",
     "u-test": "^3.3.3",
@@ -14,7 +14,7 @@
     "y-walk": "^10.0.3"
   },
   "devDependencies": {
-    "u-test": "^3.2.1"
+    "u-test": "^3.4.0"
   },
   "repository": {
     "type": "git",
