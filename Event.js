@@ -63,7 +63,7 @@ Event.prototype[define]({
 
     if(this.request.headers.origin instanceof Array) this[origin] =
       this.request.headers.origin[this.request.headers.origin.length - 1];
-    else this[origin] = this.request.headers.origin;
+    else this[origin] = this.request.headers.origin || null;
 
     return this[origin];
   },
