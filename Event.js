@@ -26,8 +26,8 @@ function Event(req,res,h,emitter,max){
   this[response] = res;
   m = url.match(/([^\?#]*)(?:\?([^#]*))?(?:#(.*))?/);
 
-  this[fragment] = m[3];
-  this[rawQuery] = m[2];
+  this[fragment] = m[3] == null ? null : m[3];
+  this[rawQuery] = m[2] == null ? null : m[2];
   this[path] = m[1];
   this[url] = url;
 
