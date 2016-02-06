@@ -2,7 +2,8 @@ var Resolver = require('y-resolver'),
     Yielded = Resolver.Yielded,
 
     simpleMethods = new Set(['GET','HEAD','POST']),
-    simpleHeaders = new Set(['accept', 'accept-language', 'content-language', 'content-type']);
+    simpleHeaders = new Set(['accept', 'accept-language', 'content-language', 'content-type']),
+    simpleResponseHeaders = new Set(['cache-control','content-language','content-type','expires','last-modified','pragma']);
 
 function checkOrigin(handler,opts){
   var origin = this.origin,
@@ -80,7 +81,11 @@ function join(set){
   var res = '',
       v;
 
-  for(v of set) res += v + ', ';
+  for(v of set){
+    v = v.toLowerCase();
+    if(!simpleResponseHeaders.has(v)) res += v + ', ';
+  }
+
   return res.slice(0,-2);
 }
 
