@@ -1,23 +1,24 @@
-var Resolver = require('y-resolver'),
+var walk = require('y-walk'),
+    Resolver = require('y-resolver'),
     Yielded = Resolver.Yielded,
 
     simpleMethods = new Set(['GET','HEAD','POST']),
     simpleHeaders = new Set(['accept', 'accept-language', 'content-language', 'content-type']),
     simpleResponseHeaders = new Set(['cache-control','content-language','content-type','expires','last-modified','pragma']);
 
-function checkOrigin(handler,opts){
+function* checkOrigin(handler,opts){
   var origin = this.origin,
       res = this.response,
 
       i,header,
       rm,rh,orh;
 
-  if(!origin) return Resolver.accept();
+  if(!origin) return;
 
-  if(!originValid(origin,handler)){
+  if(!(yield walk(originValid,[origin,handler]))){
     res.writeHead(403,'You Shall Not Pass');
     res.end();
-    return new Yielded();
+    yield new Yielded();
   }
 
   opts = opts || {};
@@ -28,13 +29,13 @@ function checkOrigin(handler,opts){
   if(this.request.method == 'OPTIONS'){
 
     rm = this.request.headers['access-control-request-method'];
-    if(!rm) return Resolver.accept();
+    if(!rm) return;
     if(rm instanceof Array) rm = rm[rm.length - 1];
 
     if(opts.methods && !(simpleMethods.has(rm) || opts.methods.has(rm))){
       res.writeHead(403,'You Shall Not Pass');
       res.end();
-      return new Yielded();
+      yield new Yielded();
     }
 
     rh = this.request.headers['access-control-request-headers'];
@@ -50,7 +51,7 @@ function checkOrigin(handler,opts){
         if(!(simpleHeaders.has(header) || opts.requestHeaders.has(header))){
           res.writeHead(403,'You Shall Not Pass');
           res.end();
-          return new Yielded();
+          yield new Yielded();
         }
       }
 
@@ -63,7 +64,7 @@ function checkOrigin(handler,opts){
     if(opts.timeout) res.setHeader('Access-Control-Max-Age',opts.timeout + '');
     res.end();
 
-    return new Yielded();
+    yield new Yielded();
 
   }
 
@@ -72,7 +73,6 @@ function checkOrigin(handler,opts){
   if(opts.responseHeaders)
     res.setHeader('Access-Control-Expose-Headers',join(opts.responseHeaders));
 
-  return Resolver.accept();
 }
 
 // - utils
@@ -89,12 +89,12 @@ function join(set){
   return res.slice(0,-2);
 }
 
-function originValid(origin,handler){
+function* originValid(origin,handler){
 
   switch(typeof handler){
     case 'string': return origin == handler;
     case 'function':
-      try{ return handler(origin); }
+      try{ return yield walk(handler,[origin]); }
       catch(e){ return false; }
     default: return !!origin.match(handler);
   }
@@ -103,4 +103,4 @@ function originValid(origin,handler){
 
 /*/ exports /*/
 
-module.exports = checkOrigin;
+module.exports = walk.wrap(checkOrigin);
