@@ -94,7 +94,9 @@ Event.prototype[define]({
   sendFile: require('./Event/sendFile.js'),
   send: require('./Event/send.js'),
   sendJSON: require('./Event/sendJSON.js'),
+  
   checkOrigin: require('./Event/checkOrigin.js'),
+  basicAuth: require('./Event/basicAuth.js'),
 
   accept: require('./Event/accept.js'),
   charset: require('./Event/charset.js'),

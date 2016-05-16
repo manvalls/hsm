@@ -50,6 +50,10 @@ Hsm.prototype[define]({
 
   allowOrigin: function(handle,opts){
     return this.on('/*',handleCORS,handle,opts);
+  },
+
+  basicAuth: function(handle,realm){
+    return this.on('/*',handleBA,handle,realm);
   }
 
 });
@@ -69,6 +73,12 @@ function onRequest(req,res){
 function* handleCORS(e,d,handle,opt){
   yield e.capture();
   yield e.checkOrigin(handle,opt);
+  e.give();
+}
+
+function* handleBA(e,d,handle,realm){
+  yield e.capture();
+  yield e.basicAuth(handle,realm);
   e.give();
 }
 

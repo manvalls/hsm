@@ -10,6 +10,10 @@ hsm2 = new Hsm(server);
 
 hsm1.allowOrigin(/./);
 
+hsm2.basicAuth(function(){
+  return true;
+});
+
 hsm2.allowOrigin(function(origin){
   return origin.indexOf('127.0.0.1') != -1;
 },{
@@ -25,6 +29,11 @@ hsm2.allowOrigin(function(origin){
   responseHeaders: ['fooheader','etag'],
   methods: [],
   allowCredentials: true
+});
+
+hsm1.take('GET /basic',function*(e){
+  yield e.basicAuth({foo: 'bar'});
+  e.sendJSON('ok');
 });
 
 hsm1.on('GET /accept',function*(e){

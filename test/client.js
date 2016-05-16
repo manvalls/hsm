@@ -287,6 +287,22 @@ t('Cache',function*(){
   assert.strictEqual(yield res.text(),'foo');
 });
 
+t('Basic auth',function*(){
+  var res;
+
+  res = yield fetch('http://localhost:8888/basic');
+  assert.strictEqual(res.status,401);
+
+  res = yield fetch('http://localhost:8888/basic',{
+    headers: new Headers({
+      Authorization: 'Basic Zm9vOmJhcg=='
+    })
+  });
+
+  assert.strictEqual(yield res.json(),'ok');
+
+});
+
 t.done.then(function(){
   navigator.sendBeacon('http://localhost:8888/endServer','');
 });
