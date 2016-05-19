@@ -17,7 +17,7 @@ var Emitter = require('y-emitter'),
 
 function Hsm(srv,hst){
 
-  if(!this instanceof Hsm) return new Hsm(srv,hst);
+  if(!(this instanceof Hsm)) return new Hsm(srv,hst);
 
   if(!srv[hsm]){
     srv[hsm] = {};
