@@ -11,7 +11,7 @@ function* basicAuth(handler,realm){
     res.setHeader('WWW-Authenticate',`Basic realm="${((realm || '') + '').replace(/\\/g,'\\\\').replace(/"/g,'\\"')}"`);
     res.writeHead(401,'You Shall Not Pass');
     res.end();
-    
+
     yield new Yielded();
 
   }

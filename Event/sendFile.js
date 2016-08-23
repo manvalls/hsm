@@ -40,7 +40,7 @@ sendFile = walk.wrap(function*(file,opt){
                           headers.etag ||
                           '"' + stats.ino + '-' + stats.dev + '-' + stats.mtime.getTime().toString(36) + '"';
 
-    if(cacheCheckFailed(this.request,this.response,stats,etag)) return;
+    yield this.checkCache(stats.mtime,etag);
     range = getRange(this.request,stats,etag);
 
     if(!validRange(range,stats)){
@@ -110,57 +110,6 @@ function populateMimeHeaders(file,headers,customMime){
     if(customMime[ext]) headers[apply](customMime[ext]);
   }
 
-}
-
-function cacheCheckFailed(req,res,stats,etag){
-  var date,inm,im;
-
-  if(req.headers['if-unmodified-since']){
-    date = new Date(req.headers['if-unmodified-since']);
-
-    if(stats.mtime - date > 1000){
-      res.writeHead(412);
-      res.end();
-      return true;
-    }
-  }
-
-  if(req.headers['if-match']){
-    im = req.headers['if-match'];
-    if(im instanceof Array) im = im.join(',');
-    im = im.match(/(W\/)?"([^"]|\\.)*"|\*/gi);
-
-    if(!im || (im.indexOf('*') == -1 && im.indexOf(etag) == -1)){
-      res.writeHead(412);
-      res.end();
-      return true;
-    }
-  }
-
-  if(req.headers['if-none-match'] ){
-
-    inm = req.headers['if-none-match'];
-    if(inm instanceof Array) inm = inm.join(',');
-    inm = inm.match(/(W\/)?"([^"]|\\.)*"|\*/gi);
-
-    if(inm && (inm.indexOf(etag) != -1 || inm.indexOf('*') != -1)){
-      if(req.method == 'GET' || req.method == 'HEAD') res.writeHead(304);
-      else res.writeHead(412);
-      res.end();
-      return true;
-    }
-
-  }else if(req.headers['if-modified-since']){
-    date = new Date(req.headers['if-modified-since']);
-
-    if(!(stats.mtime - date > 1000)){
-      res.writeHead(304);
-      res.end();
-      return true;
-    }
-  }
-
-  return false;
 }
 
 function getRange(req,stats,etag){
