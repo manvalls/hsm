@@ -43,7 +43,7 @@ class Event extends PathEvent{
     prefixes = [method + ' '];
     if(method == 'HEAD') prefixes.push('GET ');
 
-    this.emit(this,m[1],emitter,max,prefixes);
+    this.emit(m[1],emitter,max,prefixes);
   }
 
   get hsm(){ return this[hsm]; }
