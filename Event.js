@@ -16,47 +16,45 @@ var PathEvent = require('path-event'),
     lastTime = Symbol(),
     origin = Symbol();
 
-function Event(req,res,h,emitter,max){
-  var url,m,prefixes,method;
+class Event extends PathEvent{
 
-  this[hsm] = emitter.target;
-  this[request] = req;
-  url = h.compute(req.url,this);
+  constructor(req,res,h,emitter,max){
+    var url,m,prefixes,method;
 
-  this[response] = res;
-  m = url.match(/([^\?#]*)(?:\?([^#]*))?(?:#(.*))?/);
+    super();
+    this[hsm] = emitter.target;
+    this[request] = req;
+    url = h.compute(req.url,this);
 
-  this[fragment] = m[3] == null ? null : m[3];
-  this[rawQuery] = m[2] == null ? null : m[2];
-  this[path] = m[1];
-  this[url] = url;
+    this[response] = res;
+    m = url.match(/([^\?#]*)(?:\?([^#]*))?(?:#(.*))?/);
 
-  if(req.headers.query){
-    if(this[rawQuery]) this[rawQuery] += '&' + req.headers.query;
-    else this[rawQuery] = req.headers.query;
+    this[fragment] = m[3] == null ? null : m[3];
+    this[rawQuery] = m[2] == null ? null : m[2];
+    this[path] = m[1];
+    this[url] = url;
+
+    if(req.headers.query){
+      if(this[rawQuery]) this[rawQuery] += '&' + req.headers.query;
+      else this[rawQuery] = req.headers.query;
+    }
+
+    method = req.method.trim().toUpperCase();
+    prefixes = [method + ' '];
+    if(method == 'HEAD') prefixes.push('GET ');
+
+    this.emit(this,m[1],emitter,max,prefixes);
   }
 
-  method = req.method.trim().toUpperCase();
-  prefixes = [method + ' '];
-  if(method == 'HEAD') prefixes.push('GET ');
+  get hsm(){ return this[hsm]; }
+  get request(){ return this[request]; }
+  get response(){ return this[response]; }
 
-  PathEvent.call(this,m[1],emitter,max,prefixes);
-}
-
-Event.prototype = Object.create(PathEvent.prototype);
-Event.prototype[define]({
-
-  constructor: Event,
-  get hsm(){ return this[hsm]; },
-
-  get request(){ return this[request]; },
-  get response(){ return this[response]; },
-
-  get fragment(){ return this[fragment]; },
-  get rawQuery(){ return this[rawQuery]; },
-  get query(){ return query(this); },
-  get path(){ return this[path]; },
-  get url(){ return this[url]; },
+  get fragment(){ return this[fragment]; }
+  get rawQuery(){ return this[rawQuery]; }
+  get query(){ return query(this); }
+  get path(){ return this[path]; }
+  get url(){ return this[url]; }
 
   get origin(){
     if(this.hasOwnProperty(origin)) return this[origin];
@@ -66,7 +64,7 @@ Event.prototype[define]({
     else this[origin] = this.request.headers.origin || null;
 
     return this[origin];
-  },
+  }
 
   get lastTime(){
     var im,m;
@@ -83,9 +81,13 @@ Event.prototype[define]({
     }
 
     return this[lastTime] = new Date(-1e15);
-  },
+  }
 
-  get cookies(){ return cookies(this,this[request].headers.cookie || ''); },
+  get cookies(){ return cookies(this,this[request].headers.cookie || ''); }
+
+}
+
+Event.prototype[define]({
 
   redirect: require('./Event/redirect.js'),
   notModified: require('./Event/notModified.js'),

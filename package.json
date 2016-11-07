@@ -4,16 +4,16 @@
   "description": "A utility which maps request events to path ones",
   "main": "main.js",
   "dependencies": {
-    "path-event": "^6.0.2",
+    "path-event": "^6.1.0",
     "pct": "^1.1.0",
-    "u-proto": "^6.4.3",
-    "url-rewriter": "^3.1.0",
+    "u-proto": "^7.0.2",
+    "url-rewriter": "^3.1.1",
     "y-callback": "^1.2.3",
-    "y-emitter": "^12.4.2",
-    "y-walk": "^10.0.5"
+    "y-emitter": "^12.4.4",
+    "y-walk": "^10.0.6"
   },
   "devDependencies": {
-    "u-test": "^3.7.2"
+    "u-test": "^3.8.8"
   },
   "repository": {
     "type": "git",
