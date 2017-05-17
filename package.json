@@ -2,18 +2,19 @@
   "name": "hsm",
   "version": "13.5.3",
   "description": "A utility which maps request events to path ones",
-  "main": "main.js",
+  "main": "main/index.js",
   "dependencies": {
-    "path-event": "^6.1.0",
-    "pct": "^1.1.0",
-    "u-proto": "^7.0.2",
-    "url-rewriter": "^3.1.1",
-    "y-callback": "^1.2.3",
-    "y-emitter": "^12.4.4",
-    "y-walk": "^10.0.6"
+    "detacher": "^2.0.10",
+    "path-event": "^7.0.0",
+    "pct": "^1.1.1",
+    "u-proto": "^7.1.6",
+    "url-rewriter": "^4.0.0",
+    "y-callback": "^1.2.5",
+    "y-emitter": "^13.0.0",
+    "y-walk": "^10.0.9"
   },
   "devDependencies": {
-    "u-test": "^3.8.8"
+    "u-test": "^3.8.11"
   },
   "repository": {
     "type": "git",

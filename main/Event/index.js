@@ -2,8 +2,8 @@ var PathEvent = require('path-event'),
     define = require('u-proto/define'),
     pct = require('pct'),
 
-    query = require('./Event/query.js'),
-    cookies = require('./Event/cookies.js'),
+    query = require('./query.js'),
+    cookies = require('./cookies.js'),
 
     hsm = Symbol(),
     request = Symbol(),
@@ -18,7 +18,7 @@ var PathEvent = require('path-event'),
 
 class Event extends PathEvent{
 
-  constructor(req,res,h,emitter,max){
+  constructor(req,res,h,emitter){
     var url,m,prefixes,method;
 
     super();
@@ -43,9 +43,10 @@ class Event extends PathEvent{
     prefixes = [method + ' '];
     if(method == 'HEAD') prefixes.push('GET ');
 
-    this.emit(m[1],emitter,max,prefixes);
+    this.emit(m[1],emitter,prefixes);
   }
 
+  get parent(){ return this[hsm]; }
   get hsm(){ return this[hsm]; }
   get request(){ return this[request]; }
   get response(){ return this[response]; }
@@ -89,22 +90,22 @@ class Event extends PathEvent{
 
 Event.prototype[define]({
 
-  redirect: require('./Event/redirect.js'),
-  notModified: require('./Event/notModified.js'),
+  redirect: require('./redirect.js'),
+  notModified: require('./notModified.js'),
 
-  setCookie: require('./Event/setCookie.js'),
-  sendFile: require('./Event/sendFile.js'),
-  send: require('./Event/send.js'),
-  sendJSON: require('./Event/sendJSON.js'),
+  setCookie: require('./setCookie.js'),
+  sendFile: require('./sendFile.js'),
+  send: require('./send.js'),
+  sendJSON: require('./sendJSON.js'),
 
-  checkOrigin: require('./Event/checkOrigin.js'),
-  checkCache: require('./Event/checkCache.js'),
-  basicAuth: require('./Event/basicAuth.js'),
+  checkOrigin: require('./checkOrigin.js'),
+  checkCache: require('./checkCache.js'),
+  basicAuth: require('./basicAuth.js'),
 
-  accept: require('./Event/accept.js'),
-  charset: require('./Event/charset.js'),
-  encoding: require('./Event/encoding.js'),
-  language: require('./Event/language.js')
+  accept: require('./accept.js'),
+  charset: require('./charset.js'),
+  encoding: require('./encoding.js'),
+  language: require('./language.js')
 
 });
 

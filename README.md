@@ -5,18 +5,16 @@
 ## Sample usage:
 
 ```javascript
-var Hsm = require('hsm'),
-    server = require('http').createServer().listen(8080),
-    hsm = new Hsm(server);
+var server = new Hsm(8080);
 
-hsm.on('/foo',function([e]){
+server.on('/foo', function(e){
   e.response.end('bar');
 });
 ```
 
 Note that the `Hsm` constructor accepts a second parameter: the `host`, useful in environments where you need multiple web servers on the same port on the same machine.
 
-## PathEvent extenssions
+## PathEvent extensions
 
 Although these events will be used as the second argument on internal `urw.compute()` calls, some methods and properties are not available or will fail until the URL is fully computed, namely the following:
 

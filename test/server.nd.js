@@ -1,12 +1,11 @@
 var http = require('http'),
-    server = http.createServer().listen(8888,
+    Hsm = require('../main'),
+    base = new Hsm(),
+    hsm1 = base.host('localhost:8888'),
+    hsm2 = base.host('127.0.0.1:8888'),
+    d = base.bind(8888,
       () => require('u-test/browser')(`${__dirname}/client.js`)
-    ),
-    Hsm = require('../main.js'),
-    hsm1 = new Hsm(server,'localhost:8888'),
-    hsm2 = new Hsm(server);
-
-hsm2 = new Hsm(server);
+    );
 
 hsm1.allowOrigin(/./);
 
@@ -149,7 +148,5 @@ hsm2.on('GET /cache',function*(e){
 });
 
 hsm1.on('POST /endServer',function(){
-  hsm1.detach();
-  hsm2.detach();
-  server.close();
+  d.detach();
 });
