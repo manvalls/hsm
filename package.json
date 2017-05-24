@@ -5,7 +5,7 @@
   "main": "main/index.js",
   "dependencies": {
     "detacher": "^2.0.10",
-    "path-event": "^7.0.0",
+    "path-event": "^8.0.0",
     "pct": "^1.1.1",
     "u-proto": "^7.1.6",
     "url-rewriter": "^4.0.0",
