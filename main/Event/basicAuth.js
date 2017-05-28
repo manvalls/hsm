@@ -25,7 +25,7 @@ function* credentialsValid(auth,handler){
 
   base64 = auth.match(/^basic (.+)$/i)[1];
   creds = (new Buffer(base64,'base64')).toString();
-  [user,pwd] = creds.split(':');
+  [,user,pwd] = creds.match(/^(.*?)\:(.*)/);
 
   if(typeof handler == 'function'){
     try{ return yield walk(handler,[user,pwd]); }
